@@ -49,6 +49,12 @@ class StepRequest(BaseModel):
 # ---------------------------------------------------------------------------
 
 
+@app.get("/")
+def root():
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url="/docs")
+
+
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "healthy"}
