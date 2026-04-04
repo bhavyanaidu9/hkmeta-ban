@@ -1,3 +1,18 @@
+---
+title: SQL Debug Env
+emoji: 🛠️
+colorFrom: blue
+colorTo: green
+sdk: docker
+pinned: false
+tags:
+  - openenv
+  - sql
+  - debugging
+  - real-world
+  - reinforcement-learning
+---
+
 # SQL Query Debugging Environment
 
 An OpenEnv-compliant reinforcement-learning environment where an AI agent receives a broken SQL query and must submit a corrected one. Built for the **Meta OpenEnv Hackathon**.
