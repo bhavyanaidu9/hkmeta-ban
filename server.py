@@ -51,7 +51,94 @@ class StepRequest(BaseModel):
 
 @app.get("/health")
 def health() -> dict[str, str]:
-    return {"status": "ok"}
+    return {"status": "healthy"}
+
+
+@app.get("/metadata")
+def metadata() -> dict[str, Any]:
+    return {
+        "name": "sql-debug-env",
+        "description": "SQL Query Debugging environment for AI agents. Agent receives a buggy SQL query and must fix it.",
+        "version": "1.0.0",
+        "tags": ["openenv", "sql", "debugging", "real-world"],
+        "tasks": [
+            {"name": "find_high_earners", "difficulty": "easy"},
+            {"name": "top_products_by_category", "difficulty": "medium"},
+            {"name": "monthly_revenue_trend", "difficulty": "hard"},
+        ],
+        "reward_range": [0.0, 1.0],
+        "max_steps": 5,
+    }
+
+
+@app.get("/schema")
+def schema() -> dict[str, Any]:
+    return {
+        "action": {
+            "type": "object",
+            "properties": {
+                "fixed_query": {"type": "string", "description": "A corrected SQL SELECT query"}
+            },
+            "required": ["fixed_query"],
+        },
+        "observation": {
+            "type": "object",
+            "properties": {
+                "task_name": {"type": "string"},
+                "buggy_query": {"type": "string"},
+                "schema_sql": {"type": "string"},
+                "expected_rows": {"type": "array"},
+                "task_description": {"type": "string"},
+                "attempts_remaining": {"type": "integer"},
+                "done": {"type": "boolean"},
+            },
+        },
+        "state": {
+            "type": "object",
+            "properties": {
+                "initialised": {"type": "boolean"},
+                "task_name": {"type": "string"},
+                "difficulty": {"type": "string"},
+                "attempts_remaining": {"type": "integer"},
+                "done": {"type": "boolean"},
+            },
+        },
+    }
+
+
+@app.post("/mcp")
+async def mcp(request: dict[str, Any]) -> dict[str, Any]:
+    """Minimal JSON-RPC 2.0 endpoint for MCP compliance."""
+    method = request.get("method", "")
+    req_id = request.get("id", 1)
+
+    if method == "initialize":
+        return {
+            "jsonrpc": "2.0",
+            "id": req_id,
+            "result": {
+                "protocolVersion": "2024-11-05",
+                "capabilities": {"tools": {}},
+                "serverInfo": {"name": "sql-debug-env", "version": "1.0.0"},
+            },
+        }
+    if method == "tools/list":
+        return {
+            "jsonrpc": "2.0",
+            "id": req_id,
+            "result": {
+                "tools": [
+                    {"name": "reset", "description": "Reset the environment"},
+                    {"name": "step", "description": "Submit a fixed SQL query"},
+                    {"name": "state", "description": "Get current state"},
+                ]
+            },
+        }
+    return {
+        "jsonrpc": "2.0",
+        "id": req_id,
+        "error": {"code": -32601, "message": f"Method not found: {method}"},
+    }
 
 
 @app.post("/reset")
