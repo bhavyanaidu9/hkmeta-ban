@@ -1,0 +1,28 @@
+name: sql-debug-env
+version: "1.0.0"
+description: "SQL Query Debugging environment for AI agents"
+tags: ["openenv", "sql", "debugging", "real-world"]
+
+tasks:
+  - name: find_high_earners
+    difficulty: easy
+  - name: top_products_by_category
+    difficulty: medium
+  - name: monthly_revenue_trend
+    difficulty: hard
+
+action_space:
+  type: text
+  description: "A fixed SQL SELECT query string"
+
+observation_space:
+  type: object
+  fields:
+    - buggy_query: string
+    - schema_sql: string
+    - expected_rows: list
+    - task_description: string
+    - attempts_remaining: integer
+
+reward_range: [0.0, 1.0]
+max_steps: 5
