@@ -1,23 +1,14 @@
 """
 Baseline inference script for the SQL Query Debugging environment.
 
-Runs all three tasks sequentially using an LLM (default: Qwen/Qwen2.5-72B-Instruct
-via the HuggingFace router) and logs results to stdout in the OpenEnv format.
+Calls the deployed HF Space via HTTP endpoints (POST /reset, POST /step).
+Logs results to stdout in the strict OpenEnv format.
 
-Required environment variables
---------------------------------
-HF_TOKEN      — HuggingFace API token (used as the OpenAI-compatible API key)
-
-Optional environment variables
---------------------------------
-API_BASE_URL  — defaults to "https://router.huggingface.co/v1"
-MODEL_NAME    — defaults to "Qwen/Qwen2.5-72B-Instruct"
-
-Stdout format (OpenEnv spec)
------------------------------
-[START] task=<task_name> env=sql-debug-env model=<model_name>
-[STEP]  step=<n> action=<action_str> reward=<0.00> done=<true|false> error=<msg|null>
-[END]   success=<true|false> steps=<n> score=<0.000> rewards=<r1,r2,...,rn>
+Required environment variables:
+    HF_TOKEN     — HuggingFace API token
+    API_BASE_URL — LLM API endpoint (default: https://router.huggingface.co/v1)
+    MODEL_NAME   — Model identifier (default: Qwen/Qwen2.5-72B-Instruct)
+    PING_URL     — HF Space base URL (default: http://localhost:7860)
 """
 
 from __future__ import annotations
@@ -26,21 +17,17 @@ import os
 import re
 import sys
 
+import requests
 from openai import OpenAI
-
-from environment import SQLDebugEnv, SQLDebugAction, SQLDebugObservation
 
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
 
-API_BASE_URL: str = os.environ.get(
-    "API_BASE_URL", "https://router.huggingface.co/v1"
-)
-MODEL_NAME: str = os.environ.get(
-    "MODEL_NAME", "Qwen/Qwen2.5-72B-Instruct"
-)
+API_BASE_URL: str = os.environ.get("API_BASE_URL", "https://router.huggingface.co/v1")
+MODEL_NAME: str = os.environ.get("MODEL_NAME", "Qwen/Qwen2.5-72B-Instruct")
 HF_TOKEN: str = os.environ.get("HF_TOKEN", "")
+PING_URL: str = os.environ.get("PING_URL", "http://localhost:7860").rstrip("/")
 
 TASK_NAMES: list[str] = [
     "find_high_earners",
@@ -63,149 +50,161 @@ SYSTEM_PROMPT = (
     "just the raw SQL statement."
 )
 
-
 # ---------------------------------------------------------------------------
-# Helper: build user message
-# ---------------------------------------------------------------------------
-
-
-def _build_user_message(obs: SQLDebugObservation) -> str:
-    expected_preview = obs.expected_rows[:5]
-    more = len(obs.expected_rows) - len(expected_preview)
-    preview_str = "\n".join(str(r) for r in expected_preview)
-    if more > 0:
-        preview_str += f"\n... ({more} more rows)"
-
-    return (
-        f"Task: {obs.task_description}\n\n"
-        f"Database schema:\n{obs.schema_sql}\n\n"
-        f"Buggy query:\n{obs.buggy_query}\n\n"
-        f"Expected output ({len(obs.expected_rows)} rows — first 5 shown):\n"
-        f"{preview_str}\n\n"
-        f"Attempts remaining: {obs.attempts_remaining}\n\n"
-        "Return ONLY the fixed SQL query."
-    )
-
-
-# ---------------------------------------------------------------------------
-# Helper: extract SQL from model response
+# Helpers
 # ---------------------------------------------------------------------------
 
 _FENCE_RE = re.compile(r"```(?:sql)?\s*(.*?)```", re.DOTALL | re.IGNORECASE)
 
 
 def _extract_sql(text: str) -> str:
-    """Strip markdown fences if the model adds them despite the instruction."""
     match = _FENCE_RE.search(text)
     if match:
         return match.group(1).strip()
     return text.strip()
 
 
-# ---------------------------------------------------------------------------
-# Helper: escape action string for single-line log output
-# ---------------------------------------------------------------------------
-
-
 def _log_action(sql: str) -> str:
-    return sql.replace("\n", " ").replace("\r", "")
+    """Collapse SQL to single line for log output."""
+    return sql.replace("\n", " ").replace("\r", "").strip()
 
 
-# ---------------------------------------------------------------------------
-# Main
-# ---------------------------------------------------------------------------
+def _build_user_message(obs: dict) -> str:
+    expected_rows = obs.get("expected_rows", [])
+    preview = expected_rows[:5]
+    more = len(expected_rows) - len(preview)
+    preview_str = "\n".join(str(r) for r in preview)
+    if more > 0:
+        preview_str += f"\n... ({more} more rows)"
 
-
-def run_task(client: OpenAI, env: SQLDebugEnv, task_name: str) -> None:
-    obs = env.reset(task_name)
-
-    print(
-        f"[START] task={task_name} env={ENV_NAME} model={MODEL_NAME}",
-        flush=True,
+    return (
+        f"Task: {obs.get('task_description', '')}\n\n"
+        f"Database schema:\n{obs.get('schema_sql', '')}\n\n"
+        f"Buggy query:\n{obs.get('buggy_query', '')}\n\n"
+        f"Expected output ({len(expected_rows)} rows — first 5 shown):\n"
+        f"{preview_str}\n\n"
+        f"Attempts remaining: {obs.get('attempts_remaining', MAX_STEPS)}\n\n"
+        "Return ONLY the fixed SQL query."
     )
+
+
+# ---------------------------------------------------------------------------
+# Main task runner
+# ---------------------------------------------------------------------------
+
+
+def run_task(client: OpenAI, task_name: str) -> None:
+    # --- RESET via HTTP ---
+    try:
+        reset_resp = requests.post(
+            f"{PING_URL}/reset",
+            json={"task_name": task_name},
+            timeout=30,
+        )
+        reset_resp.raise_for_status()
+        obs = reset_resp.json()
+    except Exception as exc:
+        print(f"[ERROR] Failed to reset task {task_name}: {exc}", file=sys.stderr, flush=True)
+        return
+
+    # [START] line — exactly as required
+    print(f"[START] task={task_name} env={ENV_NAME} model={MODEL_NAME}", flush=True)
 
     step_num = 0
     rewards: list[float] = []
     final_done = False
+    success = False
     conversation: list[dict] = []
 
-    while step_num < MAX_STEPS and not final_done:
-        step_num += 1
+    try:
+        while step_num < MAX_STEPS and not final_done:
+            step_num += 1
 
-        # Build prompt
-        user_msg = _build_user_message(obs)
-        conversation.append({"role": "user", "content": user_msg})
+            # Build prompt
+            user_msg = _build_user_message(obs)
+            conversation.append({"role": "user", "content": user_msg})
 
-        # Call the model
-        try:
-            response = client.chat.completions.create(
-                model=MODEL_NAME,
-                messages=[{"role": "system", "content": SYSTEM_PROMPT}]
-                + conversation,
-                temperature=0.0,
-                max_tokens=512,
-            )
-            raw_answer = response.choices[0].message.content or ""
-        except Exception as exc:  # noqa: BLE001
-            raw_answer = obs.buggy_query  # fall back to buggy query on API error
+            # Call the LLM
+            try:
+                response = client.chat.completions.create(
+                    model=MODEL_NAME,
+                    messages=[{"role": "system", "content": SYSTEM_PROMPT}] + conversation,
+                    temperature=0.0,
+                    max_tokens=512,
+                )
+                raw_answer = response.choices[0].message.content or ""
+            except Exception as exc:
+                raw_answer = obs.get("buggy_query", "SELECT 1")
+                print(f"[WARN] Model API error step {step_num}: {exc}", file=sys.stderr, flush=True)
+
+            sql_answer = _extract_sql(raw_answer)
+            conversation.append({"role": "assistant", "content": sql_answer})
+
+            # --- STEP via HTTP ---
+            try:
+                step_resp = requests.post(
+                    f"{PING_URL}/step",
+                    json={"fixed_query": sql_answer},
+                    timeout=30,
+                )
+                step_resp.raise_for_status()
+                result = step_resp.json()
+            except Exception as exc:
+                error_str = str(exc)
+                print(
+                    f"[STEP] step={step_num} action={_log_action(sql_answer)} "
+                    f"reward=0.00 done=false error={error_str}",
+                    flush=True,
+                )
+                rewards.append(0.0)
+                continue
+
+            reward = float(result.get("reward", 0.0))
+            done = result.get("done", False)
+            info = result.get("info", {})
+            error_val = info.get("error") if info else None
+            error_str = str(error_val) if error_val else "null"
+
+            rewards.append(reward)
+            final_done = done
+
+            if result.get("observation"):
+                obs = result["observation"]
+
+            # [STEP] line — exact format, no quotes on action, 2 decimal reward
             print(
-                f"[WARN] Model API error on step {step_num}: {exc}",
-                file=sys.stderr,
+                f"[STEP] step={step_num} action={_log_action(sql_answer)} "
+                f"reward={reward:.2f} done={'true' if done else 'false'} error={error_str}",
                 flush=True,
             )
 
-        sql_answer = _extract_sql(raw_answer)
-        conversation.append({"role": "assistant", "content": sql_answer})
+        success = any(r == 1.0 for r in rewards)
 
-        # Submit to env
-        result = env.step(SQLDebugAction(fixed_query=sql_answer))
-        rewards.append(result.reward)
-        final_done = result.done
-
-        error_str = result.info.get("error") or "null"
-        if error_str == "null" or not error_str:
-            error_str = "null"
-
+    finally:
+        # [END] line — always emitted, no score= field, 2 decimal rewards
+        rewards_str = ",".join(f"{r:.2f}" for r in rewards)
         print(
-            f"[STEP] step={step_num} "
-            f"action={_log_action(sql_answer)!r} "
-            f"reward={result.reward:.2f} "
-            f"done={'true' if result.done else 'false'} "
-            f"error={error_str}",
+            f"[END] success={'true' if success else 'false'} "
+            f"steps={step_num} "
+            f"rewards={rewards_str}",
             flush=True,
         )
 
-        if result.observation:
-            obs = result.observation
 
-    success = any(r == 1.0 for r in rewards)
-    score = max(rewards) if rewards else 0.0
-    rewards_str = ",".join(f"{r:.3f}" for r in rewards)
-
-    print(
-        f"[END] success={'true' if success else 'false'} "
-        f"steps={step_num} "
-        f"score={score:.3f} "
-        f"rewards={rewards_str}",
-        flush=True,
-    )
+# ---------------------------------------------------------------------------
+# Entry point
+# ---------------------------------------------------------------------------
 
 
 def main() -> None:
     if not HF_TOKEN:
-        print(
-            "[ERROR] HF_TOKEN environment variable is not set.",
-            file=sys.stderr,
-        )
+        print("[ERROR] HF_TOKEN environment variable is not set.", file=sys.stderr)
         sys.exit(1)
 
     client = OpenAI(api_key=HF_TOKEN, base_url=API_BASE_URL)
-    env = SQLDebugEnv()
 
     for task_name in TASK_NAMES:
-        run_task(client, env, task_name)
-
-    env.close()
+        run_task(client, task_name)
 
 
 if __name__ == "__main__":

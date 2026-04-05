@@ -49,6 +49,12 @@ class StepRequest(BaseModel):
 # ---------------------------------------------------------------------------
 
 
+@app.get("/")
+def root():
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url="/docs")
+
+
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "healthy"}
@@ -142,12 +148,13 @@ async def mcp(request: dict[str, Any]) -> dict[str, Any]:
 
 
 @app.post("/reset")
-def reset(body: ResetRequest = ResetRequest()) -> dict[str, Any]:
+def reset(body: ResetRequest = None) -> dict[str, Any]:
     """
     Reset the environment, optionally specifying a task by name.
-
-    If *task_name* is omitted a task is chosen at random.
+    Accepts empty body {}, body with task_name, or no body at all.
     """
+    if body is None:
+        body = ResetRequest()
     try:
         obs = _env.reset(body.task_name)
     except ValueError as exc:
