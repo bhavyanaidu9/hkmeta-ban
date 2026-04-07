@@ -1,8 +1,8 @@
 """
 Baseline inference script for the SQL Query Debugging environment.
 
-Runs all three tasks sequentially using an LLM (default: Qwen/Qwen2.5-72B-Instruct
-via the HuggingFace router) and logs results to stdout in the OpenEnv format.
+Runs all five tasks sequentially using an LLM (default: Qwen/Qwen2.5-72B-Instruct
+via the HuggingFace router) and emits results in the OpenEnv stdout format.
 
 Required environment variables
 --------------------------------
@@ -13,6 +13,7 @@ Optional environment variables
 API_BASE_URL  — defaults to "https://router.huggingface.co/v1"
 MODEL_NAME    — defaults to "Qwen/Qwen2.5-72B-Instruct"
 ENV_URL       — defaults to "https://nallgopu-sql-debug-env.hf.space"
+LOG_FILE      — path to a log file for diagnostic output (default: inference.log)
 
 Stdout format (OpenEnv spec)
 -----------------------------
@@ -23,6 +24,7 @@ Stdout format (OpenEnv spec)
 
 from __future__ import annotations
 
+import logging
 import os
 import re
 import sys
@@ -35,18 +37,11 @@ from openai import OpenAI
 # Configuration
 # ---------------------------------------------------------------------------
 
-API_BASE_URL: str = os.environ.get(
-    "API_BASE_URL", "https://router.huggingface.co/v1"
-)
-MODEL_NAME: str = os.environ.get(
-    "MODEL_NAME", "Qwen/Qwen2.5-72B-Instruct"
-)
+API_BASE_URL: str = os.environ.get("API_BASE_URL", "https://router.huggingface.co/v1")
+MODEL_NAME: str = os.environ.get("MODEL_NAME", "Qwen/Qwen2.5-72B-Instruct")
 HF_TOKEN: str = os.environ.get("HF_TOKEN", "")
-
-# ✅ FIX 1: Talk to the deployed HF Space via HTTP, not local import
-ENV_URL: str = os.environ.get(
-    "ENV_URL", "https://nallgopu-sql-debug-env.hf.space"
-)
+ENV_URL: str = os.environ.get("ENV_URL", "https://nallgopu-sql-debug-env.hf.space")
+LOG_FILE: str = os.environ.get("LOG_FILE", "inference.log")
 
 TASK_NAMES: list[str] = [
     "find_high_earners",
@@ -61,6 +56,38 @@ MAX_STEPS = 5
 SUCCESS_SCORE_THRESHOLD = 0.5
 
 # ---------------------------------------------------------------------------
+# Logging setup
+#
+# Diagnostic messages (warnings, errors, debug info) go to a rotating log
+# file AND to stderr so they don't pollute the OpenEnv stdout format.
+# The [START] / [STEP] / [END] lines are written directly to stdout via
+# the `_openenv_print` helper to guarantee exact format compliance.
+# ---------------------------------------------------------------------------
+
+_logger = logging.getLogger("inference")
+_logger.setLevel(logging.DEBUG)
+
+# File handler — full diagnostics
+_file_handler = logging.FileHandler(LOG_FILE, encoding="utf-8")
+_file_handler.setLevel(logging.DEBUG)
+_file_handler.setFormatter(
+    logging.Formatter("%(asctime)s %(levelname)-8s %(message)s", datefmt="%Y-%m-%dT%H:%M:%S")
+)
+_logger.addHandler(_file_handler)
+
+# Stderr handler — warnings and above only
+_stderr_handler = logging.StreamHandler(sys.stderr)
+_stderr_handler.setLevel(logging.WARNING)
+_stderr_handler.setFormatter(logging.Formatter("%(levelname)s: %(message)s"))
+_logger.addHandler(_stderr_handler)
+
+
+def _openenv_print(msg: str) -> None:
+    """Write an OpenEnv-format line to stdout with immediate flush."""
+    print(msg, flush=True)
+
+
+# ---------------------------------------------------------------------------
 # System prompt
 # ---------------------------------------------------------------------------
 
@@ -72,13 +99,13 @@ SYSTEM_PROMPT = (
     "just the raw SQL statement."
 )
 
-
 # ---------------------------------------------------------------------------
-# Helper: build user message from observation dict
+# Helpers
 # ---------------------------------------------------------------------------
 
 
 def _build_user_message(obs: dict) -> str:
+    """Construct the LLM prompt from an observation dict."""
     expected = obs.get("expected_rows", [])
     preview = expected[:5]
     more = len(expected) - len(preview)
@@ -97,36 +124,28 @@ def _build_user_message(obs: dict) -> str:
     )
 
 
-# ---------------------------------------------------------------------------
-# Helper: strip markdown fences if model adds them
-# ---------------------------------------------------------------------------
-
 _FENCE_RE = re.compile(r"```(?:sql)?\s*(.*?)```", re.DOTALL | re.IGNORECASE)
 
 
 def _extract_sql(text: str) -> str:
+    """Strip markdown code fences if the model wraps its response."""
     match = _FENCE_RE.search(text)
-    if match:
-        return match.group(1).strip()
-    return text.strip()
-
-
-# ---------------------------------------------------------------------------
-# Helper: collapse SQL to single line for log output
-# ---------------------------------------------------------------------------
+    return match.group(1).strip() if match else text.strip()
 
 
 def _log_action(sql: str) -> str:
+    """Collapse a multi-line SQL query to a single line for log output."""
     return sql.replace("\n", " ").replace("\r", "").strip()
 
 
 # ---------------------------------------------------------------------------
-# Logging helpers — exact OpenEnv stdout format
+# OpenEnv stdout helpers — exact format required by the spec
 # ---------------------------------------------------------------------------
 
 
 def log_start(task: str, env: str, model: str) -> None:
-    print(f"[START] task={task} env={env} model={model}", flush=True)
+    _openenv_print(f"[START] task={task} env={env} model={model}")
+    _logger.info("Episode started: task=%s model=%s", task, model)
 
 
 def log_step(
@@ -138,11 +157,13 @@ def log_step(
 ) -> None:
     error_val = error if error else "null"
     done_val = str(done).lower()
-    # ✅ FIX 2: removed !r so action is a plain string, not repr-quoted
-    print(
+    _openenv_print(
         f"[STEP] step={step} action={_log_action(action)} "
-        f"reward={reward:.2f} done={done_val} error={error_val}",
-        flush=True,
+        f"reward={reward:.2f} done={done_val} error={error_val}"
+    )
+    _logger.debug(
+        "Step %d: reward=%.2f done=%s error=%s",
+        step, reward, done_val, error_val,
     )
 
 
@@ -152,12 +173,14 @@ def log_end(
     score: float,
     rewards: List[float],
 ) -> None:
-    # ✅ FIX 3: rewards formatted to exactly 2 decimal places (was 3)
     rewards_str = ",".join(f"{r:.2f}" for r in rewards)
-    print(
+    _openenv_print(
         f"[END] success={str(success).lower()} steps={steps} "
-        f"score={score:.3f} rewards={rewards_str}",
-        flush=True,
+        f"score={score:.3f} rewards={rewards_str}"
+    )
+    _logger.info(
+        "Episode ended: success=%s steps=%d score=%.3f",
+        success, steps, score,
     )
 
 
@@ -167,13 +190,23 @@ def log_end(
 
 
 def run_task(task_name: str, client: OpenAI, http: httpx.Client) -> None:
-    # ✅ FIX 1 (continued): reset via HTTP POST, not local env.reset()
+    """
+    Run one full episode for *task_name*.
+
+    Parameters
+    ----------
+    task_name:
+        Name of the task to run (must match a registered task).
+    client:
+        Configured OpenAI-compatible client for LLM inference.
+    http:
+        Configured httpx client pointing at the deployed environment.
+    """
+    _logger.info("Resetting environment for task: %s", task_name)
     r = http.post("/reset", json={"task_name": task_name})
     if r.status_code != 200:
-        print(
-            f"[ERROR] /reset failed for task {task_name}: {r.status_code} {r.text}",
-            file=sys.stderr,
-            flush=True,
+        _logger.error(
+            "/reset failed for task %s: %s %s", task_name, r.status_code, r.text
         )
         return
 
@@ -188,39 +221,27 @@ def run_task(task_name: str, client: OpenAI, http: httpx.Client) -> None:
     while step_num < MAX_STEPS and not final_done:
         step_num += 1
 
-        # Build prompt from HTTP observation dict
         user_msg = _build_user_message(obs)
         conversation.append({"role": "user", "content": user_msg})
 
-        # Call the LLM via OpenAI-compatible client
         try:
             response = client.chat.completions.create(
                 model=MODEL_NAME,
-                messages=[{"role": "system", "content": SYSTEM_PROMPT}]
-                + conversation,
+                messages=[{"role": "system", "content": SYSTEM_PROMPT}] + conversation,
                 temperature=0.0,
                 max_tokens=512,
             )
             raw_answer = response.choices[0].message.content or ""
         except Exception as exc:
             raw_answer = obs.get("buggy_query", "SELECT 1")
-            print(
-                f"[WARN] Model API error on step {step_num}: {exc}",
-                file=sys.stderr,
-                flush=True,
-            )
+            _logger.warning("Model API error on step %d: %s", step_num, exc)
 
         sql_answer = _extract_sql(raw_answer)
         conversation.append({"role": "assistant", "content": sql_answer})
 
-        # ✅ FIX 1 (continued): submit action via HTTP POST /step
         step_r = http.post("/step", json={"fixed_query": sql_answer})
         if step_r.status_code != 200:
-            print(
-                f"[ERROR] /step failed: {step_r.status_code} {step_r.text}",
-                file=sys.stderr,
-                flush=True,
-            )
+            _logger.error("/step failed: %s %s", step_r.status_code, step_r.text)
             break
 
         result: dict = step_r.json()
@@ -248,7 +269,6 @@ def run_task(task_name: str, client: OpenAI, http: httpx.Client) -> None:
         if next_obs:
             obs = next_obs
 
-    # Compute normalized score: average across all steps taken
     score = sum(rewards) / len(rewards) if rewards else 0.0
     score = min(max(score, 0.0), 1.0)
     success = score >= SUCCESS_SCORE_THRESHOLD
@@ -262,19 +282,23 @@ def run_task(task_name: str, client: OpenAI, http: httpx.Client) -> None:
 
 
 def main() -> None:
+    """Run baseline agent across all registered tasks."""
     if not HF_TOKEN:
-        print(
-            "[ERROR] HF_TOKEN environment variable is not set.",
-            file=sys.stderr,
-        )
+        _logger.critical("HF_TOKEN environment variable is not set.")
         sys.exit(1)
+
+    _logger.info(
+        "Starting inference: model=%s env=%s tasks=%s",
+        MODEL_NAME, ENV_URL, TASK_NAMES,
+    )
 
     client = OpenAI(api_key=HF_TOKEN, base_url=API_BASE_URL)
 
-    # ✅ FIX 1: use httpx to call the Space over HTTP
     with httpx.Client(base_url=ENV_URL, timeout=60.0) as http:
         for task_name in TASK_NAMES:
             run_task(task_name, client, http)
+
+    _logger.info("All tasks complete.")
 
 
 if __name__ == "__main__":

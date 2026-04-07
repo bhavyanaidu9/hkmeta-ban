@@ -3,20 +3,27 @@ FastAPI server exposing the SQLDebugEnv via the OpenEnv HTTP spec.
 
 Endpoints
 ---------
-POST /reset   — start / restart an episode
-POST /step    — submit a fixed query
-GET  /state   — inspect current state
-GET  /health  — liveness probe
+POST /reset    — start / restart an episode
+POST /step     — submit a fixed query (SELECT only; max 10 000 chars)
+GET  /state    — inspect current state
+GET  /health   — detailed liveness + readiness probe
+GET  /metadata — environment metadata
+GET  /schema   — action / observation / state JSON schemas
+POST /mcp      — minimal JSON-RPC 2.0 (MCP compliance)
 """
 
 from __future__ import annotations
 
+import re
+import sqlite3
+import time
 from typing import Any, Optional
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
 from environment import SQLDebugEnv, SQLDebugAction
+from tasks import TASKS
 
 # ---------------------------------------------------------------------------
 # Global env instance (sufficient for single-agent evaluation)
@@ -29,6 +36,56 @@ app = FastAPI(
 )
 
 _env = SQLDebugEnv()
+
+# ---------------------------------------------------------------------------
+# Security: disallow non-SELECT or write-intent patterns in agent queries.
+# Agents must submit plain SELECT statements only.
+# ---------------------------------------------------------------------------
+
+# DML / DDL keywords that have no place in a SELECT-only query
+_WRITE_PATTERN = re.compile(
+    r"\b(INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|TRUNCATE|REPLACE|ATTACH|DETACH)\b",
+    re.IGNORECASE,
+)
+
+MAX_QUERY_LEN = 10_000  # characters
+
+
+def _validate_query(query: str) -> Optional[str]:
+    """
+    Validate a submitted SQL query.
+
+    Returns an error string on failure, or None on success.
+
+    Rules
+    -----
+    1. Must not be empty after stripping whitespace.
+    2. Must not exceed MAX_QUERY_LEN characters.
+    3. Must begin with SELECT (environment only supports read queries).
+    4. Must not contain write/DDL keywords (belt-and-braces safety check).
+    """
+    stripped = query.strip()
+
+    if not stripped:
+        return "fixed_query must not be empty."
+
+    if len(stripped) > MAX_QUERY_LEN:
+        return f"fixed_query exceeds maximum length of {MAX_QUERY_LEN} characters."
+
+    if not stripped.upper().lstrip("(").startswith("SELECT"):
+        return (
+            "fixed_query must be a SELECT statement. "
+            "Write operations (INSERT, UPDATE, DELETE, DROP, …) are not permitted."
+        )
+
+    if _WRITE_PATTERN.search(stripped):
+        return (
+            "fixed_query contains a disallowed write or DDL keyword "
+            "(INSERT, UPDATE, DELETE, DROP, CREATE, ALTER, TRUNCATE, …). "
+            "Submit a read-only SELECT query."
+        )
+
+    return None
 
 
 # ---------------------------------------------------------------------------
@@ -56,15 +113,47 @@ def root():
 
 
 @app.get("/health")
-def health() -> dict[str, str]:
-    return {"status": "healthy"}
+def health() -> dict[str, Any]:
+    """
+    Detailed liveness + readiness probe.
+
+    Performs a trivial SQLite round-trip to confirm the database layer is
+    operational, and reports the number of registered tasks.
+    """
+    db_ok = False
+    db_error: Optional[str] = None
+    try:
+        con = sqlite3.connect(":memory:")
+        con.execute("SELECT 1")
+        con.close()
+        db_ok = True
+    except Exception as exc:  # noqa: BLE001
+        db_error = str(exc)
+
+    env_state = _env.state()
+
+    return {
+        "status": "healthy" if db_ok else "degraded",
+        "version": "1.0.0",
+        "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "database": {
+            "backend": "sqlite3 (in-memory)",
+            "ok": db_ok,
+            "error": db_error,
+        },
+        "tasks_registered": len(TASKS),
+        "env_state": env_state,
+    }
 
 
 @app.get("/metadata")
 def metadata() -> dict[str, Any]:
     return {
         "name": "sql-debug-env",
-        "description": "SQL Query Debugging environment for AI agents. Agent receives a buggy SQL query and must fix it.",
+        "description": (
+            "SQL Query Debugging environment for AI agents. "
+            "Agent receives a buggy SQL query and must fix it."
+        ),
         "version": "1.0.0",
         "tags": ["openenv", "sql", "debugging", "real-world"],
         "tasks": [
@@ -85,30 +174,33 @@ def schema() -> dict[str, Any]:
         "action": {
             "type": "object",
             "properties": {
-                "fixed_query": {"type": "string", "description": "A corrected SQL SELECT query"}
+                "fixed_query": {
+                    "type": "string",
+                    "description": "A corrected SQL SELECT query (max 10 000 chars)",
+                }
             },
             "required": ["fixed_query"],
         },
         "observation": {
             "type": "object",
             "properties": {
-                "task_name": {"type": "string"},
-                "buggy_query": {"type": "string"},
-                "schema_sql": {"type": "string"},
-                "expected_rows": {"type": "array"},
-                "task_description": {"type": "string"},
+                "task_name":          {"type": "string"},
+                "buggy_query":        {"type": "string"},
+                "schema_sql":         {"type": "string"},
+                "expected_rows":      {"type": "array"},
+                "task_description":   {"type": "string"},
                 "attempts_remaining": {"type": "integer"},
-                "done": {"type": "boolean"},
+                "done":               {"type": "boolean"},
             },
         },
         "state": {
             "type": "object",
             "properties": {
-                "initialised": {"type": "boolean"},
-                "task_name": {"type": "string"},
-                "difficulty": {"type": "string"},
+                "initialised":        {"type": "boolean"},
+                "task_name":          {"type": "string"},
+                "difficulty":         {"type": "string"},
                 "attempts_remaining": {"type": "integer"},
-                "done": {"type": "boolean"},
+                "done":               {"type": "boolean"},
             },
         },
     }
@@ -137,7 +229,7 @@ async def mcp(request: dict[str, Any]) -> dict[str, Any]:
             "result": {
                 "tools": [
                     {"name": "reset", "description": "Reset the environment"},
-                    {"name": "step", "description": "Submit a fixed SQL query"},
+                    {"name": "step",  "description": "Submit a fixed SQL query"},
                     {"name": "state", "description": "Get current state"},
                 ]
             },
@@ -153,7 +245,9 @@ async def mcp(request: dict[str, Any]) -> dict[str, Any]:
 def reset(body: ResetRequest = None) -> dict[str, Any]:
     """
     Reset the environment, optionally specifying a task by name.
-    Accepts empty body {}, body with task_name, or no body at all.
+
+    Accepts an empty body ``{}``, a body with ``task_name``, or no body at all.
+    On success returns the initial observation.
     """
     if body is None:
         body = ResetRequest()
@@ -171,9 +265,14 @@ def reset(body: ResetRequest = None) -> dict[str, Any]:
 def step(body: StepRequest) -> dict[str, Any]:
     """
     Submit a fixed SQL query and receive a reward signal.
+
+    The query must be a non-empty SELECT statement of at most
+    ``MAX_QUERY_LEN`` (10 000) characters.  DDL / DML keywords are rejected
+    to prevent unintended side-effects.
     """
-    if not body.fixed_query.strip():
-        raise HTTPException(status_code=400, detail="fixed_query must not be empty.")
+    err_msg = _validate_query(body.fixed_query)
+    if err_msg:
+        raise HTTPException(status_code=400, detail=err_msg)
 
     try:
         result = _env.step(SQLDebugAction(fixed_query=body.fixed_query))
@@ -182,9 +281,9 @@ def step(body: StepRequest) -> dict[str, Any]:
 
     return {
         "observation": result.observation.model_dump() if result.observation else None,
-        "reward": result.reward,
-        "done": result.done,
-        "info": result.info,
+        "reward":      result.reward,
+        "done":        result.done,
+        "info":        result.info,
     }
 
 
