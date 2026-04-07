@@ -1,17 +1,23 @@
 """
 server/app.py — entry point for multi-mode deployment.
 
-Imports the FastAPI application from the root server module so the
-openenv validator can find it at the expected path.
+Loads the FastAPI app from the root server.py using importlib to avoid
+the naming conflict between the server/ package and server.py module.
 """
 
+import importlib.util
 import os
-import sys
 
-# Ensure the repo root is on the path so root-level modules are importable
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-from server import app  # noqa: E402, F401  re-export for uvicorn
+# Load root server.py as "root_server" to avoid shadowing this package
+_spec = importlib.util.spec_from_file_location(
+    "root_server", os.path.join(_root, "server.py")
+)
+_mod = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_mod)
+
+app = _mod.app  # re-export for uvicorn
 
 
 def main() -> None:
