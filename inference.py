@@ -71,7 +71,9 @@ _logger.setLevel(logging.DEBUG)
 _file_handler = logging.FileHandler(LOG_FILE, encoding="utf-8")
 _file_handler.setLevel(logging.DEBUG)
 _file_handler.setFormatter(
-    logging.Formatter("%(asctime)s %(levelname)-8s %(message)s", datefmt="%Y-%m-%dT%H:%M:%S")
+    logging.Formatter(
+        "%(asctime)s %(levelname)-8s %(message)s", datefmt="%Y-%m-%dT%H:%M:%S"
+    )
 )
 _logger.addHandler(_file_handler)
 
@@ -163,7 +165,10 @@ def log_step(
     )
     _logger.debug(
         "Step %d: reward=%.2f done=%s error=%s",
-        step, reward, done_val, error_val,
+        step,
+        reward,
+        done_val,
+        error_val,
     )
 
 
@@ -180,7 +185,9 @@ def log_end(
     )
     _logger.info(
         "Episode ended: success=%s steps=%d score=%.3f",
-        success, steps, score,
+        success,
+        steps,
+        score,
     )
 
 
@@ -289,7 +296,9 @@ def main() -> None:
 
     _logger.info(
         "Starting inference: model=%s env=%s tasks=%s",
-        MODEL_NAME, ENV_URL, TASK_NAMES,
+        MODEL_NAME,
+        ENV_URL,
+        TASK_NAMES,
     )
 
     client = OpenAI(api_key=HF_TOKEN, base_url=API_BASE_URL)

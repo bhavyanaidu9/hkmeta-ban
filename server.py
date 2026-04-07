@@ -109,6 +109,7 @@ class StepRequest(BaseModel):
 @app.get("/")
 def root():
     from fastapi.responses import RedirectResponse
+
     return RedirectResponse(url="/docs")
 
 
@@ -157,11 +158,11 @@ def metadata() -> dict[str, Any]:
         "version": "1.0.0",
         "tags": ["openenv", "sql", "debugging", "real-world"],
         "tasks": [
-            {"name": "find_high_earners",        "difficulty": "easy"},
+            {"name": "find_high_earners", "difficulty": "easy"},
             {"name": "top_products_by_category", "difficulty": "medium"},
-            {"name": "detect_duplicate_orders",  "difficulty": "medium"},
-            {"name": "monthly_revenue_trend",    "difficulty": "hard"},
-            {"name": "slow_query_optimization",  "difficulty": "hard"},
+            {"name": "detect_duplicate_orders", "difficulty": "medium"},
+            {"name": "monthly_revenue_trend", "difficulty": "hard"},
+            {"name": "slow_query_optimization", "difficulty": "hard"},
         ],
         "reward_range": [0.0, 1.0],
         "max_steps": 5,
@@ -184,23 +185,23 @@ def schema() -> dict[str, Any]:
         "observation": {
             "type": "object",
             "properties": {
-                "task_name":          {"type": "string"},
-                "buggy_query":        {"type": "string"},
-                "schema_sql":         {"type": "string"},
-                "expected_rows":      {"type": "array"},
-                "task_description":   {"type": "string"},
+                "task_name": {"type": "string"},
+                "buggy_query": {"type": "string"},
+                "schema_sql": {"type": "string"},
+                "expected_rows": {"type": "array"},
+                "task_description": {"type": "string"},
                 "attempts_remaining": {"type": "integer"},
-                "done":               {"type": "boolean"},
+                "done": {"type": "boolean"},
             },
         },
         "state": {
             "type": "object",
             "properties": {
-                "initialised":        {"type": "boolean"},
-                "task_name":          {"type": "string"},
-                "difficulty":         {"type": "string"},
+                "initialised": {"type": "boolean"},
+                "task_name": {"type": "string"},
+                "difficulty": {"type": "string"},
                 "attempts_remaining": {"type": "integer"},
-                "done":               {"type": "boolean"},
+                "done": {"type": "boolean"},
             },
         },
     }
@@ -229,7 +230,7 @@ async def mcp(request: dict[str, Any]) -> dict[str, Any]:
             "result": {
                 "tools": [
                     {"name": "reset", "description": "Reset the environment"},
-                    {"name": "step",  "description": "Submit a fixed SQL query"},
+                    {"name": "step", "description": "Submit a fixed SQL query"},
                     {"name": "state", "description": "Get current state"},
                 ]
             },
@@ -281,9 +282,9 @@ def step(body: StepRequest) -> dict[str, Any]:
 
     return {
         "observation": result.observation.model_dump() if result.observation else None,
-        "reward":      result.reward,
-        "done":        result.done,
-        "info":        result.info,
+        "reward": result.reward,
+        "done": result.done,
+        "info": result.info,
     }
 
 

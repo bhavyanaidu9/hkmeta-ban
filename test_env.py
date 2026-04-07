@@ -168,18 +168,22 @@ def test_invalid_sql_scores_zero(env):
 def test_empty_select_scores_zero(env):
     """SELECT with no matching rows should score 0.0 (no overlap)."""
     env.reset("find_high_earners")
-    result = env.step(SQLDebugAction(
-        fixed_query="SELECT name, salary FROM employees WHERE salary > 9999999"
-    ))
+    result = env.step(
+        SQLDebugAction(
+            fixed_query="SELECT name, salary FROM employees WHERE salary > 9999999"
+        )
+    )
     assert result.reward == 0.0
 
 
 def test_wrong_columns_scores_zero(env):
     """Selecting wrong columns should yield 0.0 (column mismatch)."""
     env.reset("find_high_earners")
-    result = env.step(SQLDebugAction(
-        fixed_query="SELECT id, department FROM employees WHERE salary > 50000"
-    ))
+    result = env.step(
+        SQLDebugAction(
+            fixed_query="SELECT id, department FROM employees WHERE salary > 50000"
+        )
+    )
     assert result.reward == 0.0
     assert result.info.get("match_type") == "wrong_columns"
 
@@ -188,9 +192,11 @@ def test_partial_reward_is_between_0_and_1(env):
     """A query returning some but not all correct rows should yield partial credit."""
     env.reset("find_high_earners")
     # Returns only 1 of the 7 high earners — partial credit expected
-    result = env.step(SQLDebugAction(
-        fixed_query="SELECT name, salary FROM employees WHERE salary > 50000 AND name = 'Alice Johnson'"
-    ))
+    result = env.step(
+        SQLDebugAction(
+            fixed_query="SELECT name, salary FROM employees WHERE salary > 50000 AND name = 'Alice Johnson'"
+        )
+    )
     # Partial: 0.3 + 0.5 * jaccard, or 0.0 if jaccard=0. Either way < 1.0.
     assert result.reward < 1.0
     assert result.reward >= 0.0
@@ -202,9 +208,11 @@ def test_partial_reward_formula(env):
     # The buggy query (salary > 5000) returns ALL 10 employees; expected is 7.
     # Overlap = 7 (all expected rows ARE present in actual).
     # Jaccard = 7 / max(7, 10) = 7/10 = 0.7  =>  reward = 0.3 + 0.5*0.7 = 0.65
-    result = env.step(SQLDebugAction(
-        fixed_query="SELECT name, salary FROM employees WHERE salary > 5000 ORDER BY name"
-    ))
+    result = env.step(
+        SQLDebugAction(
+            fixed_query="SELECT name, salary FROM employees WHERE salary > 5000 ORDER BY name"
+        )
+    )
     assert 0.3 <= result.reward < 1.0
     info = result.info
     assert info["match_type"] == "partial"
@@ -254,9 +262,7 @@ def test_step_before_reset_raises(env):
 
 def test_info_contains_required_fields_on_success(env):
     env.reset("find_high_earners")
-    result = env.step(SQLDebugAction(
-        fixed_query=CORRECT_QUERIES["find_high_earners"]
-    ))
+    result = env.step(SQLDebugAction(fixed_query=CORRECT_QUERIES["find_high_earners"]))
     info = result.info
     assert "match_type" in info
     assert "jaccard_similarity" in info
@@ -280,17 +286,17 @@ def test_info_contains_required_fields_on_error(env):
 
 def test_execution_time_ms_is_non_negative(env):
     env.reset("find_high_earners")
-    result = env.step(SQLDebugAction(
-        fixed_query="SELECT name, salary FROM employees WHERE salary > 50000 ORDER BY name"
-    ))
+    result = env.step(
+        SQLDebugAction(
+            fixed_query="SELECT name, salary FROM employees WHERE salary > 50000 ORDER BY name"
+        )
+    )
     assert result.info["execution_time_ms"] >= 0.0
 
 
 def test_exact_match_info_fields(env):
     env.reset("find_high_earners")
-    result = env.step(SQLDebugAction(
-        fixed_query=CORRECT_QUERIES["find_high_earners"]
-    ))
+    result = env.step(SQLDebugAction(fixed_query=CORRECT_QUERIES["find_high_earners"]))
     assert result.info["match_type"] == "exact"
     assert result.info["jaccard_similarity"] == 1.0
 
