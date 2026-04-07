@@ -68,17 +68,11 @@ def metadata() -> dict[str, Any]:
         "version": "1.0.0",
         "tags": ["openenv", "sql", "debugging", "real-world"],
         "tasks": [
-<<<<<<< HEAD
             {"name": "find_high_earners",        "difficulty": "easy"},
             {"name": "top_products_by_category", "difficulty": "medium"},
             {"name": "detect_duplicate_orders",  "difficulty": "medium"},
             {"name": "monthly_revenue_trend",    "difficulty": "hard"},
             {"name": "slow_query_optimization",  "difficulty": "hard"},
-=======
-            {"name": "find_high_earners", "difficulty": "easy"},
-            {"name": "top_products_by_category", "difficulty": "medium"},
-            {"name": "monthly_revenue_trend", "difficulty": "hard"},
->>>>>>> fd1ea2d9e31acfd8f7b4b5b4160be905ea24af27
         ],
         "reward_range": [0.0, 1.0],
         "max_steps": 5,
@@ -156,7 +150,6 @@ async def mcp(request: dict[str, Any]) -> dict[str, Any]:
 
 
 @app.post("/reset")
-<<<<<<< HEAD
 def reset(body: ResetRequest = None) -> dict[str, Any]:
     """
     Reset the environment, optionally specifying a task by name.
@@ -164,14 +157,6 @@ def reset(body: ResetRequest = None) -> dict[str, Any]:
     """
     if body is None:
         body = ResetRequest()
-=======
-def reset(body: ResetRequest = ResetRequest()) -> dict[str, Any]:
-    """
-    Reset the environment, optionally specifying a task by name.
-
-    If *task_name* is omitted a task is chosen at random.
-    """
->>>>>>> fd1ea2d9e31acfd8f7b4b5b4160be905ea24af27
     try:
         obs = _env.reset(body.task_name)
     except ValueError as exc:
