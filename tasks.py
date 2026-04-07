@@ -271,6 +271,7 @@ ORDER BY s.region, month""".strip(),
 
 
 # ---------------------------------------------------------------------------
+<<<<<<< HEAD
 # Task 4: detect_duplicate_orders (medium-hard)
 # Bug: GROUP BY is missing, so duplicates aren't aggregated correctly
 # ---------------------------------------------------------------------------
@@ -389,6 +390,8 @@ ORDER BY e.department, e.salary DESC""".strip(),
 
 
 # ---------------------------------------------------------------------------
+=======
+>>>>>>> fd1ea2d9e31acfd8f7b4b5b4160be905ea24af27
 # Registry
 # ---------------------------------------------------------------------------
 
@@ -398,8 +401,11 @@ TASKS: dict[str, Task] = {
         TASK_FIND_HIGH_EARNERS,
         TASK_TOP_PRODUCTS_BY_CATEGORY,
         TASK_MONTHLY_REVENUE_TREND,
+<<<<<<< HEAD
         TASK_DETECT_DUPLICATE_ORDERS,
         TASK_SLOW_QUERY_OPTIMIZATION,
+=======
+>>>>>>> fd1ea2d9e31acfd8f7b4b5b4160be905ea24af27
     ]
 }
 

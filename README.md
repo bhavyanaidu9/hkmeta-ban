@@ -194,15 +194,23 @@ Scores achieved by `Qwen/Qwen2.5-72B-Instruct` with a zero-shot prompt:
 ```
 c:/meta-hk/
 ├── environment.py     # SQLDebugEnv class + Pydantic models
+<<<<<<< HEAD
 ├── tasks.py           # 5 task definitions (schema, seed data, queries)
 ├── server.py          # FastAPI HTTP server (OpenEnv spec)
 ├── openenv.yaml       # OpenEnv metadata
 ├── inference.py       # Baseline agent using OpenAI-compatible API
 ├── test_env.py        # pytest unit tests for SQLDebugEnv
+=======
+├── tasks.py           # 3 task definitions (schema, seed data, queries)
+├── server.py          # FastAPI HTTP server (OpenEnv spec)
+├── openenv.yaml       # OpenEnv metadata
+├── inference.py       # Baseline agent using OpenAI-compatible API
+>>>>>>> fd1ea2d9e31acfd8f7b4b5b4160be905ea24af27
 ├── Dockerfile         # Container definition
 ├── requirements.txt   # Python dependencies
 └── README.md          # This file
 ```
+<<<<<<< HEAD
 
 ---
 
@@ -229,3 +237,5 @@ Scores vary due to LLM non-determinism. Run `python inference.py` to reproduce.
 - **Session isolation** — per-request environment instances for concurrent agent evaluation
 - **Adaptive difficulty** — dynamically adjust task based on agent performance history
 - **More task domains** — window functions, CTEs, recursive queries, index usage
+=======
+>>>>>>> fd1ea2d9e31acfd8f7b4b5b4160be905ea24af27
