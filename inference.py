@@ -51,7 +51,9 @@ ENV_URL: str = os.environ.get(
 TASK_NAMES: list[str] = [
     "find_high_earners",
     "top_products_by_category",
+    "detect_duplicate_orders",
     "monthly_revenue_trend",
+    "slow_query_optimization",
 ]
 
 ENV_NAME = "sql-debug-env"

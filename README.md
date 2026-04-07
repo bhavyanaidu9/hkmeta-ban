@@ -194,11 +194,38 @@ Scores achieved by `Qwen/Qwen2.5-72B-Instruct` with a zero-shot prompt:
 ```
 c:/meta-hk/
 ├── environment.py     # SQLDebugEnv class + Pydantic models
-├── tasks.py           # 3 task definitions (schema, seed data, queries)
+├── tasks.py           # 5 task definitions (schema, seed data, queries)
 ├── server.py          # FastAPI HTTP server (OpenEnv spec)
 ├── openenv.yaml       # OpenEnv metadata
 ├── inference.py       # Baseline agent using OpenAI-compatible API
+├── test_env.py        # pytest unit tests for SQLDebugEnv
 ├── Dockerfile         # Container definition
 ├── requirements.txt   # Python dependencies
 └── README.md          # This file
 ```
+
+---
+
+## Benchmark Results
+
+Scores achieved by `Qwen/Qwen2.5-72B-Instruct` (zero-shot, temperature=0):
+
+| Task | Difficulty | Avg Score | Notes |
+|------|-----------|-----------|-------|
+| `find_high_earners` | Easy | ~1.0 | Solved in 1 step consistently |
+| `top_products_by_category` | Medium | ~0.7–1.0 | JOIN fix found; RANK() harder |
+| `detect_duplicate_orders` | Medium | ~0.8–1.0 | GROUP BY fix straightforward |
+| `monthly_revenue_trend` | Hard | ~0.3–0.8 | Date format bug is subtle |
+| `slow_query_optimization` | Hard | ~0.5–0.9 | Needs understanding of query plans |
+
+Scores vary due to LLM non-determinism. Run `python inference.py` to reproduce.
+
+---
+
+## Future Enhancements
+
+- **Multi-dialect support** — extend to PostgreSQL/MySQL syntax differences
+- **Query plan scoring** — reward not just correctness but execution efficiency (EXPLAIN output)
+- **Session isolation** — per-request environment instances for concurrent agent evaluation
+- **Adaptive difficulty** — dynamically adjust task based on agent performance history
+- **More task domains** — window functions, CTEs, recursive queries, index usage

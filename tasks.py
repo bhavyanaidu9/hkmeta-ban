@@ -271,6 +271,124 @@ ORDER BY s.region, month""".strip(),
 
 
 # ---------------------------------------------------------------------------
+# Task 4: detect_duplicate_orders (medium-hard)
+# Bug: GROUP BY is missing, so duplicates aren't aggregated correctly
+# ---------------------------------------------------------------------------
+
+TASK_DETECT_DUPLICATE_ORDERS = Task(
+    task_name="detect_duplicate_orders",
+    difficulty="medium",
+    schema_sql="""
+CREATE TABLE orders (
+    id INTEGER PRIMARY KEY,
+    customer_id INTEGER NOT NULL,
+    product_id INTEGER NOT NULL,
+    order_date TEXT NOT NULL,
+    amount REAL NOT NULL
+);
+""".strip(),
+    seed_sql="""
+INSERT INTO orders (id, customer_id, product_id, order_date, amount) VALUES
+(1,  101, 501, '2024-01-10', 99.99),
+(2,  101, 501, '2024-01-10', 99.99),
+(3,  102, 502, '2024-01-11', 149.99),
+(4,  103, 503, '2024-01-12', 49.99),
+(5,  103, 503, '2024-01-12', 49.99),
+(6,  103, 503, '2024-01-12', 49.99),
+(7,  104, 504, '2024-01-13', 199.99),
+(8,  105, 501, '2024-01-14', 99.99),
+(9,  105, 501, '2024-01-14', 99.99),
+(10, 106, 506, '2024-01-15', 79.99);
+""".strip(),
+    buggy_query=(
+        "SELECT customer_id, product_id, order_date, amount, COUNT(*) AS duplicate_count "
+        "FROM orders "
+        "HAVING COUNT(*) > 1 "
+        "ORDER BY duplicate_count DESC"
+    ),
+    correct_query=(
+        "SELECT customer_id, product_id, order_date, amount, COUNT(*) AS duplicate_count "
+        "FROM orders "
+        "GROUP BY customer_id, product_id, order_date, amount "
+        "HAVING COUNT(*) > 1 "
+        "ORDER BY duplicate_count DESC"
+    ),
+    task_description=(
+        "Find duplicate orders — groups of orders from the same customer "
+        "for the same product on the same date at the same price.\n"
+        "Return columns: customer_id, product_id, order_date, amount, duplicate_count.\n"
+        "Only include groups with more than 1 occurrence, ordered by duplicate_count descending.\n\n"
+        "The current query is missing a GROUP BY clause before the HAVING clause, "
+        "which causes a SQL error in strict mode or returns wrong results. "
+        "Add the correct GROUP BY on all non-aggregated columns."
+    ),
+)
+
+
+# ---------------------------------------------------------------------------
+# Task 5: slow_query_optimization (hard)
+# Bug: Uses correlated subquery (O(n²)) instead of a JOIN (O(n log n))
+# ---------------------------------------------------------------------------
+
+TASK_SLOW_QUERY_OPTIMIZATION = Task(
+    task_name="slow_query_optimization",
+    difficulty="hard",
+    schema_sql="""
+CREATE TABLE employees (
+    id INTEGER PRIMARY KEY,
+    name TEXT NOT NULL,
+    department TEXT NOT NULL,
+    salary REAL NOT NULL,
+    manager_id INTEGER
+);
+""".strip(),
+    seed_sql="""
+INSERT INTO employees (id, name, department, salary, manager_id) VALUES
+(1,  'Alice Johnson',  'Engineering', 120000, NULL),
+(2,  'Bob Smith',      'Engineering',  95000, 1),
+(3,  'Carol White',    'Engineering',  88000, 1),
+(4,  'David Brown',    'HR',           72000, NULL),
+(5,  'Eva Martinez',   'HR',           65000, 4),
+(6,  'Frank Lee',      'Marketing',    80000, NULL),
+(7,  'Grace Kim',      'Engineering',  91000, 1),
+(8,  'Henry Davis',    'HR',           68000, 4),
+(9,  'Isla Thompson',  'Marketing',    75000, 6),
+(10, 'James Wilson',   'Marketing',    70000, 6);
+""".strip(),
+    buggy_query="""SELECT
+    e.name,
+    e.department,
+    e.salary,
+    (SELECT AVG(salary) FROM employees e2 WHERE e2.department = e.department) AS dept_avg_salary
+FROM employees e
+WHERE e.salary > (SELECT AVG(salary) FROM employees e2 WHERE e2.department = e.department)
+ORDER BY e.department, e.salary DESC""".strip(),
+    correct_query="""SELECT
+    e.name,
+    e.department,
+    e.salary,
+    dept.avg_salary AS dept_avg_salary
+FROM employees e
+JOIN (
+    SELECT department, AVG(salary) AS avg_salary
+    FROM employees
+    GROUP BY department
+) dept ON e.department = dept.department
+WHERE e.salary > dept.avg_salary
+ORDER BY e.department, e.salary DESC""".strip(),
+    task_description=(
+        "Find employees who earn above their department's average salary.\n"
+        "Return columns: name, department, salary, dept_avg_salary.\n"
+        "Order by department, then salary descending.\n\n"
+        "The current query uses a correlated subquery that recalculates the department "
+        "average for every single row (O(n²) complexity — very slow on large tables). "
+        "Rewrite it using a JOIN with a pre-aggregated subquery so the department "
+        "average is computed only once per department (O(n log n))."
+    ),
+)
+
+
+# ---------------------------------------------------------------------------
 # Registry
 # ---------------------------------------------------------------------------
 
@@ -280,6 +398,8 @@ TASKS: dict[str, Task] = {
         TASK_FIND_HIGH_EARNERS,
         TASK_TOP_PRODUCTS_BY_CATEGORY,
         TASK_MONTHLY_REVENUE_TREND,
+        TASK_DETECT_DUPLICATE_ORDERS,
+        TASK_SLOW_QUERY_OPTIMIZATION,
     ]
 }
 

@@ -8,7 +8,11 @@ tasks:
     difficulty: easy
   - name: top_products_by_category
     difficulty: medium
+  - name: detect_duplicate_orders
+    difficulty: medium
   - name: monthly_revenue_trend
+    difficulty: hard
+  - name: slow_query_optimization
     difficulty: hard
 
 action_space:

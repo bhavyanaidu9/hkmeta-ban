@@ -68,9 +68,11 @@ def metadata() -> dict[str, Any]:
         "version": "1.0.0",
         "tags": ["openenv", "sql", "debugging", "real-world"],
         "tasks": [
-            {"name": "find_high_earners", "difficulty": "easy"},
+            {"name": "find_high_earners",        "difficulty": "easy"},
             {"name": "top_products_by_category", "difficulty": "medium"},
-            {"name": "monthly_revenue_trend", "difficulty": "hard"},
+            {"name": "detect_duplicate_orders",  "difficulty": "medium"},
+            {"name": "monthly_revenue_trend",    "difficulty": "hard"},
+            {"name": "slow_query_optimization",  "difficulty": "hard"},
         ],
         "reward_range": [0.0, 1.0],
         "max_steps": 5,
