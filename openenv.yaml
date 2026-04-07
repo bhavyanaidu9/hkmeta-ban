@@ -1,37 +1,47 @@
 name: sql-debug-env
 version: "1.0.0"
-description: "SQL Query Debugging environment for AI agents"
-tags: ["openenv", "sql", "debugging", "real-world"]
+description: "SQL Query Debugging environment for AI agents — fix broken SQL queries across 5 real-world tasks"
+tags: ["openenv", "sql", "debugging", "real-world", "reinforcement-learning"]
 
 tasks:
   - name: find_high_earners
     difficulty: easy
+    description: "Fix a wrong salary threshold in a WHERE clause"
   - name: top_products_by_category
     difficulty: medium
-<<<<<<< HEAD
+    description: "Fix a broken JOIN and add window-function ranking"
   - name: detect_duplicate_orders
     difficulty: medium
+    description: "Add a missing GROUP BY before a HAVING clause"
   - name: monthly_revenue_trend
     difficulty: hard
+    description: "Fix a strftime format bug and add a HAVING filter"
   - name: slow_query_optimization
     difficulty: hard
-=======
-  - name: monthly_revenue_trend
-    difficulty: hard
->>>>>>> fd1ea2d9e31acfd8f7b4b5b4160be905ea24af27
+    description: "Replace a correlated subquery with an efficient JOIN"
 
 action_space:
   type: text
-  description: "A fixed SQL SELECT query string"
+  description: "A corrected SQL SELECT query string"
 
 observation_space:
   type: object
   fields:
+    - task_name: string
     - buggy_query: string
     - schema_sql: string
     - expected_rows: list
     - task_description: string
     - attempts_remaining: integer
+    - done: boolean
 
 reward_range: [0.0, 1.0]
 max_steps: 5
+
+endpoints:
+  reset: "POST /reset"
+  step:  "POST /step"
+  state: "GET /state"
+  health: "GET /health"
+  metadata: "GET /metadata"
+  schema: "GET /schema"
