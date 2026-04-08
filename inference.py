@@ -37,10 +37,11 @@ from openai import OpenAI
 # Configuration
 # ---------------------------------------------------------------------------
 
-API_BASE_URL: str = os.environ.get("API_BASE_URL", "https://router.huggingface.co/v1")
-MODEL_NAME: str = os.environ.get("MODEL_NAME", "Qwen/Qwen2.5-72B-Instruct")
-HF_TOKEN: str = os.environ.get("HF_TOKEN", "")
-ENV_URL: str = os.environ.get("ENV_URL", "https://nallgopu-sql-debug-env.hf.space")
+API_BASE_URL: str = os.getenv("API_BASE_URL", "https://router.huggingface.co/v1")
+MODEL_NAME: str = os.getenv("MODEL_NAME", "Qwen/Qwen2.5-72B-Instruct")
+HF_TOKEN: str | None = os.getenv("HF_TOKEN")
+LOCAL_IMAGE_NAME: str | None = os.getenv("LOCAL_IMAGE_NAME")
+ENV_URL: str = os.getenv("ENV_URL", "https://nallgopu-sql-debug-env.hf.space")
 LOG_FILE: str = os.environ.get("LOG_FILE", "inference.log")
 
 TASK_NAMES: list[str] = [
