@@ -58,7 +58,7 @@ class SQLDebugAction(BaseModel):
 class SQLDebugReward(BaseModel):
     """Result returned by step()."""
 
-    reward: float = Field(..., ge=0.0, le=1.0)
+    reward: float = Field(..., gt=0.0, lt=1.0)
     done: bool
     info: dict[str, Any] = Field(default_factory=dict)
     observation: Optional[SQLDebugObservation] = None
@@ -197,7 +197,7 @@ def _score(
     if not expected and not actual:
         metrics["match_type"] = "exact"
         metrics["jaccard_similarity"] = 1.0
-        return 1.0, metrics
+        return 0.99, metrics
 
     norm_expected = _normalise_rows(expected)
     norm_actual = _normalise_rows(actual)
@@ -207,14 +207,14 @@ def _score(
         metrics["match_type"] = "exact"
         metrics["jaccard_similarity"] = 1.0
         metrics["row_overlap"] = len(expected)
-        return 1.0, metrics
+        return 0.99, metrics
 
-    # Column-set check — completely wrong schema → 0
+    # Column-set check — completely wrong schema → near 0
     expected_cols = set(expected[0].keys()) if expected else set()
     actual_cols = set(actual[0].keys()) if actual else set()
     if expected_cols != actual_cols:
         metrics["match_type"] = "wrong_columns"
-        return 0.0, metrics
+        return 0.01, metrics
 
     # Partial credit: Jaccard-style row overlap
     def _row_key(r: dict) -> frozenset:
@@ -238,7 +238,7 @@ def _score(
 
     if jaccard == 0.0:
         metrics["match_type"] = "no_overlap"
-        return 0.0, metrics
+        return 0.01, metrics
 
     metrics["match_type"] = "partial"
     reward = round(0.3 + 0.5 * jaccard, 4)
@@ -368,7 +368,7 @@ class SQLDebugEnv:
         execution_ms = round((time.monotonic() - t0) * 1000, 1)
 
         if sql_error:
-            reward = 0.0
+            reward = 0.01
             info: dict[str, Any] = {
                 "error": sql_error,
                 "sql_error": True,
@@ -389,7 +389,7 @@ class SQLDebugEnv:
             }
 
         # Episode ends on exact match or exhausted attempts
-        if reward == 1.0 or self._attempts_remaining == 0:
+        if reward >= 0.99 or self._attempts_remaining == 0:
             self._done = True
 
         info["attempts_remaining"] = self._attempts_remaining
