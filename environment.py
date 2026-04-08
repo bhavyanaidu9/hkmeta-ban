@@ -350,7 +350,7 @@ class SQLDebugEnv:
             raise RuntimeError("Call reset() before step().")
         if self._done:
             return SQLDebugReward(
-                reward=0.0,
+                reward=0.01,
                 done=True,
                 info={"error": "Episode already finished. Call reset()."},
                 observation=self._build_observation(),

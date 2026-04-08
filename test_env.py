@@ -137,11 +137,11 @@ def test_reset_can_switch_tasks(env):
 
 @pytest.mark.parametrize("task_name", ALL_TASKS)
 def test_correct_query_scores_1(env, task_name):
-    """Every task has a valid correct_query that should yield reward=1.0."""
+    """Every task has a valid correct_query that should yield reward=0.99 (exact match)."""
     env.reset(task_name)
     result = env.step(SQLDebugAction(fixed_query=CORRECT_QUERIES[task_name]))
-    assert result.reward == 1.0, (
-        f"Task '{task_name}' expected reward=1.0, got {result.reward}. "
+    assert result.reward == 0.99, (
+        f"Task '{task_name}' expected reward=0.99, got {result.reward}. "
         f"Info: {result.info}"
     )
     assert result.done is True
@@ -161,30 +161,30 @@ def test_buggy_query_scores_below_1(env):
 def test_invalid_sql_scores_zero(env):
     env.reset("find_high_earners")
     result = env.step(SQLDebugAction(fixed_query="THIS IS NOT VALID SQL!!!"))
-    assert result.reward == 0.0
+    assert result.reward == 0.01
     assert result.info.get("sql_error") is True
 
 
 def test_empty_select_scores_zero(env):
-    """SELECT with no matching rows should score 0.0 (no overlap)."""
+    """SELECT with no matching rows should score 0.01 (no overlap)."""
     env.reset("find_high_earners")
     result = env.step(
         SQLDebugAction(
             fixed_query="SELECT name, salary FROM employees WHERE salary > 9999999"
         )
     )
-    assert result.reward == 0.0
+    assert result.reward == 0.01
 
 
 def test_wrong_columns_scores_zero(env):
-    """Selecting wrong columns should yield 0.0 (column mismatch)."""
+    """Selecting wrong columns should yield 0.01 (column mismatch)."""
     env.reset("find_high_earners")
     result = env.step(
         SQLDebugAction(
             fixed_query="SELECT id, department FROM employees WHERE salary > 50000"
         )
     )
-    assert result.reward == 0.0
+    assert result.reward == 0.01
     assert result.info.get("match_type") == "wrong_columns"
 
 
@@ -197,9 +197,9 @@ def test_partial_reward_is_between_0_and_1(env):
             fixed_query="SELECT name, salary FROM employees WHERE salary > 50000 AND name = 'Alice Johnson'"
         )
     )
-    # Partial: 0.3 + 0.5 * jaccard, or 0.0 if jaccard=0. Either way < 1.0.
-    assert result.reward < 1.0
-    assert result.reward >= 0.0
+    # Partial: 0.3 + 0.5 * jaccard, or 0.01 if jaccard=0. Either way < 0.99.
+    assert result.reward < 0.99
+    assert result.reward > 0.0
 
 
 def test_partial_reward_formula(env):
@@ -241,11 +241,11 @@ def test_episode_ends_after_max_attempts(env):
 
 
 def test_step_after_done_returns_zero(env):
-    """Stepping after the episode ends must not raise; reward=0 and done=True."""
+    """Stepping after the episode ends must not raise; reward=0.01 and done=True."""
     env.reset("find_high_earners")
     env.step(SQLDebugAction(fixed_query=CORRECT_QUERIES["find_high_earners"]))
     result = env.step(SQLDebugAction(fixed_query="SELECT 1"))
-    assert result.reward == 0.0
+    assert result.reward == 0.01
     assert result.done is True
     assert "Episode already finished" in result.info.get("error", "")
 
@@ -363,7 +363,7 @@ def test_reuse_after_close(env):
 def test_reward_in_range(env, task_name):
     obs = env.reset(task_name)
     result = env.step(SQLDebugAction(fixed_query=obs.buggy_query))
-    assert 0.0 <= result.reward <= 1.0
+    assert 0.0 < result.reward < 1.0
 
 
 # ===========================================================================
@@ -374,13 +374,13 @@ def test_reward_in_range(env, task_name):
 def test_score_exact_match():
     rows = [{"name": "Alice", "salary": "95000.0"}]
     reward, metrics = _score(rows, rows)
-    assert reward == 1.0
+    assert reward == 0.99
     assert metrics["match_type"] == "exact"
 
 
 def test_score_both_empty():
     reward, metrics = _score([], [])
-    assert reward == 1.0
+    assert reward == 0.99
     assert metrics["match_type"] == "exact"
 
 
@@ -388,7 +388,7 @@ def test_score_wrong_columns():
     expected = [{"name": "Alice", "salary": "95000"}]
     actual = [{"id": "1", "dept": "Eng"}]
     reward, metrics = _score(expected, actual)
-    assert reward == 0.0
+    assert reward == 0.01
     assert metrics["match_type"] == "wrong_columns"
 
 
@@ -396,7 +396,7 @@ def test_score_no_overlap():
     expected = [{"name": "Alice", "salary": "95000"}]
     actual = [{"name": "Bob", "salary": "30000"}]
     reward, metrics = _score(expected, actual)
-    assert reward == 0.0
+    assert reward == 0.01
     assert metrics["match_type"] == "no_overlap"
 
 
@@ -432,7 +432,7 @@ def test_score_order_insensitive():
         {"name": "Alice", "salary": "95000"},
     ]
     reward, metrics = _score(expected, actual)
-    assert reward == 1.0
+    assert reward == 0.99
     assert metrics["match_type"] == "exact"
 
 
