@@ -58,7 +58,7 @@ class SQLDebugAction(BaseModel):
 class SQLDebugReward(BaseModel):
     """Result returned by step()."""
 
-    reward: float = Field(..., gt=0.0, lt=1.0)
+    reward: float = Field(..., ge=0.0, le=1.0)
     done: bool
     info: dict[str, Any] = Field(default_factory=dict)
     observation: Optional[SQLDebugObservation] = None
