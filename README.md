@@ -213,8 +213,8 @@ Expected stdout format:
 
 ```
 [START] task=find_high_earners env=sql-debug-env model=Qwen/Qwen2.5-72B-Instruct
-[STEP] step=1 action=SELECT name, salary FROM employees WHERE salary > 50000 ORDER BY name reward=1.00 done=true error=null
-[END] success=true steps=1 score=1.000 rewards=1.00
+[STEP] step=1 action=SELECT name, salary FROM employees WHERE salary > 50000 ORDER BY name reward=0.99 done=true error=null
+[END] success=true steps=1 score=0.9900 rewards=0.99
 ```
 
 ### Run tests

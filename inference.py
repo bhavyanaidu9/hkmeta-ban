@@ -21,7 +21,7 @@ Stdout format (OpenEnv spec — exact)
 --------------------------------------
 [START] task=<task_name> env=<benchmark> model=<model_name>
 [STEP] step=<n> action=<action_str> reward=<0.00> done=<true|false> error=<msg|null>
-[END] success=<true|false> steps=<n> rewards=<r1,r2,...,rn>
+[END] success=<true|false> steps=<n> score=<0.0000> rewards=<r1,r2,...,rn>
 """
 
 from __future__ import annotations
@@ -116,8 +116,11 @@ def log_step(
 
 def log_end(success: bool, steps: int, rewards: List[float]) -> None:
     rewards_str = ",".join(f"{r:.2f}" for r in rewards)
+    # Task score = best reward achieved, clamped strictly to (0, 1)
+    score = max(rewards) if rewards else 0.01
+    score = max(0.01, min(0.99, score))
     print(
-        f"[END] success={str(success).lower()} steps={steps} rewards={rewards_str}",
+        f"[END] success={str(success).lower()} steps={steps} score={score:.4f} rewards={rewards_str}",
         flush=True,
     )
 
@@ -162,7 +165,7 @@ def run_task(task_name: str, http: httpx.Client) -> None:
     except Exception as exc:
         # Emit minimal lines so the harness always sees START + END
         log_start(task=task_name, env=ENV_NAME, model=MODEL_NAME)
-        log_end(success=False, steps=0, rewards=[])
+        log_end(success=False, steps=0, rewards=[0.01])
         print(f"WARNING: /reset failed for {task_name}: {exc}", file=sys.stderr)
         return
 
