@@ -207,15 +207,15 @@ def run_task(task_name: str, http: httpx.Client) -> None:
                 log_step(
                     step=step_num,
                     action=sql_answer,
-                    reward=0.0,
+                    reward=0.01,
                     done=True,
                     error=str(exc),
                 )
-                rewards.append(0.0)
+                rewards.append(0.01)
                 final_done = True
                 break
 
-            reward = float(result.get("reward", 0.0))
+            reward = float(result.get("reward", 0.01))
             final_done = bool(result.get("done", False))
 
             # Extract any SQL error from the info dict
