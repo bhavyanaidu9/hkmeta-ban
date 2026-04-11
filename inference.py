@@ -58,7 +58,7 @@ client = OpenAI(
 
 ENV_NAME = "sql-debug-env"
 MAX_STEPS = 5
-SUCCESS_THRESHOLD = 0.99  # reward >= 0.99 counts as solved (exact match)
+SUCCESS_THRESHOLD = 1.0  # reward == 1.0 counts as solved (exact match)
 
 TASK_NAMES: list[str] = [
     "find_high_earners",
@@ -116,9 +116,9 @@ def log_step(
 
 def log_end(success: bool, steps: int, rewards: List[float]) -> None:
     rewards_str = ",".join(f"{r:.2f}" for r in rewards)
-    # Task score = best reward achieved, clamped strictly to (0, 1)
+    # Task score = best reward achieved, clamped strictly to (0, 1]
     score = max(rewards) if rewards else 0.01
-    score = max(0.01, min(0.99, score))
+    score = max(0.01, min(1.0, score))
     print(
         f"[END] success={str(success).lower()} steps={steps} score={score:.4f} rewards={rewards_str}",
         flush=True,
@@ -132,19 +132,12 @@ def log_end(success: bool, steps: int, rewards: List[float]) -> None:
 
 def _build_user_message(obs: dict) -> str:
     """Construct the LLM prompt from an observation dict."""
-    expected = obs.get("expected_rows", [])
-    preview = expected[:5]
-    more = len(expected) - len(preview)
-    preview_str = "\n".join(str(r) for r in preview)
-    if more > 0:
-        preview_str += f"\n... ({more} more rows)"
-
+    expected_count = obs.get("expected_row_count", 0)
     return (
         f"Task: {obs.get('task_description', '')}\n\n"
         f"Database schema:\n{obs.get('schema_sql', '')}\n\n"
         f"Buggy query:\n{obs.get('buggy_query', '')}\n\n"
-        f"Expected output ({len(expected)} rows — first 5 shown):\n"
-        f"{preview_str}\n\n"
+        f"Expected output: {expected_count} rows\n\n"
         f"Attempts remaining: {obs.get('attempts_remaining', 0)}\n\n"
         "Return ONLY the fixed SQL query."
     )

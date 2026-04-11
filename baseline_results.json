@@ -1,0 +1,802 @@
+[
+  {
+    "task": "find_high_earners",
+    "seed": 0,
+    "status": "ok",
+    "obs_keys": [
+      "task_name",
+      "buggy_query",
+      "schema_sql",
+      "expected_row_count",
+      "task_description",
+      "attempts_remaining",
+      "done"
+    ],
+    "expected_row_count": 7,
+    "reward": 0.0
+  },
+  {
+    "task": "find_high_earners",
+    "seed": 1,
+    "status": "ok",
+    "obs_keys": [
+      "task_name",
+      "buggy_query",
+      "schema_sql",
+      "expected_row_count",
+      "task_description",
+      "attempts_remaining",
+      "done"
+    ],
+    "expected_row_count": 7,
+    "reward": 0.0
+  },
+  {
+    "task": "find_high_earners",
+    "seed": 2,
+    "status": "ok",
+    "obs_keys": [
+      "task_name",
+      "buggy_query",
+      "schema_sql",
+      "expected_row_count",
+      "task_description",
+      "attempts_remaining",
+      "done"
+    ],
+    "expected_row_count": 7,
+    "reward": 0.0
+  },
+  {
+    "task": "find_high_earners",
+    "seed": 3,
+    "status": "ok",
+    "obs_keys": [
+      "task_name",
+      "buggy_query",
+      "schema_sql",
+      "expected_row_count",
+      "task_description",
+      "attempts_remaining",
+      "done"
+    ],
+    "expected_row_count": 7,
+    "reward": 0.0
+  },
+  {
+    "task": "find_high_earners",
+    "seed": 4,
+    "status": "ok",
+    "obs_keys": [
+      "task_name",
+      "buggy_query",
+      "schema_sql",
+      "expected_row_count",
+      "task_description",
+      "attempts_remaining",
+      "done"
+    ],
+    "expected_row_count": 7,
+    "reward": 0.0
+  },
+  {
+    "task": "find_high_earners",
+    "seed": 5,
+    "status": "ok",
+    "obs_keys": [
+      "task_name",
+      "buggy_query",
+      "schema_sql",
+      "expected_row_count",
+      "task_description",
+      "attempts_remaining",
+      "done"
+    ],
+    "expected_row_count": 7,
+    "reward": 0.0
+  },
+  {
+    "task": "find_high_earners",
+    "seed": 6,
+    "status": "ok",
+    "obs_keys": [
+      "task_name",
+      "buggy_query",
+      "schema_sql",
+      "expected_row_count",
+      "task_description",
+      "attempts_remaining",
+      "done"
+    ],
+    "expected_row_count": 7,
+    "reward": 0.0
+  },
+  {
+    "task": "find_high_earners",
+    "seed": 7,
+    "status": "ok",
+    "obs_keys": [
+      "task_name",
+      "buggy_query",
+      "schema_sql",
+      "expected_row_count",
+      "task_description",
+      "attempts_remaining",
+      "done"
+    ],
+    "expected_row_count": 7,
+    "reward": 0.0
+  },
+  {
+    "task": "find_high_earners",
+    "seed": 8,
+    "status": "ok",
+    "obs_keys": [
+      "task_name",
+      "buggy_query",
+      "schema_sql",
+      "expected_row_count",
+      "task_description",
+      "attempts_remaining",
+      "done"
+    ],
+    "expected_row_count": 7,
+    "reward": 0.0
+  },
+  {
+    "task": "find_high_earners",
+    "seed": 9,
+    "status": "ok",
+    "obs_keys": [
+      "task_name",
+      "buggy_query",
+      "schema_sql",
+      "expected_row_count",
+      "task_description",
+      "attempts_remaining",
+      "done"
+    ],
+    "expected_row_count": 7,
+    "reward": 0.0
+  },
+  {
+    "task": "detect_duplicate_orders",
+    "seed": 0,
+    "status": "ok",
+    "obs_keys": [
+      "task_name",
+      "buggy_query",
+      "schema_sql",
+      "expected_row_count",
+      "task_description",
+      "attempts_remaining",
+      "done"
+    ],
+    "expected_row_count": 3,
+    "reward": 0.0
+  },
+  {
+    "task": "detect_duplicate_orders",
+    "seed": 1,
+    "status": "ok",
+    "obs_keys": [
+      "task_name",
+      "buggy_query",
+      "schema_sql",
+      "expected_row_count",
+      "task_description",
+      "attempts_remaining",
+      "done"
+    ],
+    "expected_row_count": 3,
+    "reward": 0.0
+  },
+  {
+    "task": "detect_duplicate_orders",
+    "seed": 2,
+    "status": "ok",
+    "obs_keys": [
+      "task_name",
+      "buggy_query",
+      "schema_sql",
+      "expected_row_count",
+      "task_description",
+      "attempts_remaining",
+      "done"
+    ],
+    "expected_row_count": 3,
+    "reward": 0.0
+  },
+  {
+    "task": "detect_duplicate_orders",
+    "seed": 3,
+    "status": "ok",
+    "obs_keys": [
+      "task_name",
+      "buggy_query",
+      "schema_sql",
+      "expected_row_count",
+      "task_description",
+      "attempts_remaining",
+      "done"
+    ],
+    "expected_row_count": 3,
+    "reward": 0.0
+  },
+  {
+    "task": "detect_duplicate_orders",
+    "seed": 4,
+    "status": "ok",
+    "obs_keys": [
+      "task_name",
+      "buggy_query",
+      "schema_sql",
+      "expected_row_count",
+      "task_description",
+      "attempts_remaining",
+      "done"
+    ],
+    "expected_row_count": 3,
+    "reward": 0.0
+  },
+  {
+    "task": "detect_duplicate_orders",
+    "seed": 5,
+    "status": "ok",
+    "obs_keys": [
+      "task_name",
+      "buggy_query",
+      "schema_sql",
+      "expected_row_count",
+      "task_description",
+      "attempts_remaining",
+      "done"
+    ],
+    "expected_row_count": 3,
+    "reward": 0.0
+  },
+  {
+    "task": "detect_duplicate_orders",
+    "seed": 6,
+    "status": "ok",
+    "obs_keys": [
+      "task_name",
+      "buggy_query",
+      "schema_sql",
+      "expected_row_count",
+      "task_description",
+      "attempts_remaining",
+      "done"
+    ],
+    "expected_row_count": 3,
+    "reward": 0.0
+  },
+  {
+    "task": "detect_duplicate_orders",
+    "seed": 7,
+    "status": "ok",
+    "obs_keys": [
+      "task_name",
+      "buggy_query",
+      "schema_sql",
+      "expected_row_count",
+      "task_description",
+      "attempts_remaining",
+      "done"
+    ],
+    "expected_row_count": 3,
+    "reward": 0.0
+  },
+  {
+    "task": "detect_duplicate_orders",
+    "seed": 8,
+    "status": "ok",
+    "obs_keys": [
+      "task_name",
+      "buggy_query",
+      "schema_sql",
+      "expected_row_count",
+      "task_description",
+      "attempts_remaining",
+      "done"
+    ],
+    "expected_row_count": 3,
+    "reward": 0.0
+  },
+  {
+    "task": "detect_duplicate_orders",
+    "seed": 9,
+    "status": "ok",
+    "obs_keys": [
+      "task_name",
+      "buggy_query",
+      "schema_sql",
+      "expected_row_count",
+      "task_description",
+      "attempts_remaining",
+      "done"
+    ],
+    "expected_row_count": 3,
+    "reward": 0.0
+  },
+  {
+    "task": "top_products_by_category",
+    "seed": 0,
+    "status": "ok",
+    "obs_keys": [
+      "task_name",
+      "buggy_query",
+      "schema_sql",
+      "expected_row_count",
+      "task_description",
+      "attempts_remaining",
+      "done"
+    ],
+    "expected_row_count": 3,
+    "reward": 0.0
+  },
+  {
+    "task": "top_products_by_category",
+    "seed": 1,
+    "status": "ok",
+    "obs_keys": [
+      "task_name",
+      "buggy_query",
+      "schema_sql",
+      "expected_row_count",
+      "task_description",
+      "attempts_remaining",
+      "done"
+    ],
+    "expected_row_count": 3,
+    "reward": 0.0
+  },
+  {
+    "task": "top_products_by_category",
+    "seed": 2,
+    "status": "ok",
+    "obs_keys": [
+      "task_name",
+      "buggy_query",
+      "schema_sql",
+      "expected_row_count",
+      "task_description",
+      "attempts_remaining",
+      "done"
+    ],
+    "expected_row_count": 3,
+    "reward": 0.0
+  },
+  {
+    "task": "top_products_by_category",
+    "seed": 3,
+    "status": "ok",
+    "obs_keys": [
+      "task_name",
+      "buggy_query",
+      "schema_sql",
+      "expected_row_count",
+      "task_description",
+      "attempts_remaining",
+      "done"
+    ],
+    "expected_row_count": 3,
+    "reward": 0.0
+  },
+  {
+    "task": "top_products_by_category",
+    "seed": 4,
+    "status": "ok",
+    "obs_keys": [
+      "task_name",
+      "buggy_query",
+      "schema_sql",
+      "expected_row_count",
+      "task_description",
+      "attempts_remaining",
+      "done"
+    ],
+    "expected_row_count": 3,
+    "reward": 0.0
+  },
+  {
+    "task": "top_products_by_category",
+    "seed": 5,
+    "status": "ok",
+    "obs_keys": [
+      "task_name",
+      "buggy_query",
+      "schema_sql",
+      "expected_row_count",
+      "task_description",
+      "attempts_remaining",
+      "done"
+    ],
+    "expected_row_count": 3,
+    "reward": 0.0
+  },
+  {
+    "task": "top_products_by_category",
+    "seed": 6,
+    "status": "ok",
+    "obs_keys": [
+      "task_name",
+      "buggy_query",
+      "schema_sql",
+      "expected_row_count",
+      "task_description",
+      "attempts_remaining",
+      "done"
+    ],
+    "expected_row_count": 3,
+    "reward": 0.0
+  },
+  {
+    "task": "top_products_by_category",
+    "seed": 7,
+    "status": "ok",
+    "obs_keys": [
+      "task_name",
+      "buggy_query",
+      "schema_sql",
+      "expected_row_count",
+      "task_description",
+      "attempts_remaining",
+      "done"
+    ],
+    "expected_row_count": 3,
+    "reward": 0.0
+  },
+  {
+    "task": "top_products_by_category",
+    "seed": 8,
+    "status": "ok",
+    "obs_keys": [
+      "task_name",
+      "buggy_query",
+      "schema_sql",
+      "expected_row_count",
+      "task_description",
+      "attempts_remaining",
+      "done"
+    ],
+    "expected_row_count": 3,
+    "reward": 0.0
+  },
+  {
+    "task": "top_products_by_category",
+    "seed": 9,
+    "status": "ok",
+    "obs_keys": [
+      "task_name",
+      "buggy_query",
+      "schema_sql",
+      "expected_row_count",
+      "task_description",
+      "attempts_remaining",
+      "done"
+    ],
+    "expected_row_count": 3,
+    "reward": 0.0
+  },
+  {
+    "task": "monthly_revenue_trend",
+    "seed": 0,
+    "status": "ok",
+    "obs_keys": [
+      "task_name",
+      "buggy_query",
+      "schema_sql",
+      "expected_row_count",
+      "task_description",
+      "attempts_remaining",
+      "done"
+    ],
+    "expected_row_count": 11,
+    "reward": 0.0
+  },
+  {
+    "task": "monthly_revenue_trend",
+    "seed": 1,
+    "status": "ok",
+    "obs_keys": [
+      "task_name",
+      "buggy_query",
+      "schema_sql",
+      "expected_row_count",
+      "task_description",
+      "attempts_remaining",
+      "done"
+    ],
+    "expected_row_count": 11,
+    "reward": 0.0
+  },
+  {
+    "task": "monthly_revenue_trend",
+    "seed": 2,
+    "status": "ok",
+    "obs_keys": [
+      "task_name",
+      "buggy_query",
+      "schema_sql",
+      "expected_row_count",
+      "task_description",
+      "attempts_remaining",
+      "done"
+    ],
+    "expected_row_count": 11,
+    "reward": 0.0
+  },
+  {
+    "task": "monthly_revenue_trend",
+    "seed": 3,
+    "status": "ok",
+    "obs_keys": [
+      "task_name",
+      "buggy_query",
+      "schema_sql",
+      "expected_row_count",
+      "task_description",
+      "attempts_remaining",
+      "done"
+    ],
+    "expected_row_count": 11,
+    "reward": 0.0
+  },
+  {
+    "task": "monthly_revenue_trend",
+    "seed": 4,
+    "status": "ok",
+    "obs_keys": [
+      "task_name",
+      "buggy_query",
+      "schema_sql",
+      "expected_row_count",
+      "task_description",
+      "attempts_remaining",
+      "done"
+    ],
+    "expected_row_count": 11,
+    "reward": 0.0
+  },
+  {
+    "task": "monthly_revenue_trend",
+    "seed": 5,
+    "status": "ok",
+    "obs_keys": [
+      "task_name",
+      "buggy_query",
+      "schema_sql",
+      "expected_row_count",
+      "task_description",
+      "attempts_remaining",
+      "done"
+    ],
+    "expected_row_count": 11,
+    "reward": 0.0
+  },
+  {
+    "task": "monthly_revenue_trend",
+    "seed": 6,
+    "status": "ok",
+    "obs_keys": [
+      "task_name",
+      "buggy_query",
+      "schema_sql",
+      "expected_row_count",
+      "task_description",
+      "attempts_remaining",
+      "done"
+    ],
+    "expected_row_count": 11,
+    "reward": 0.0
+  },
+  {
+    "task": "monthly_revenue_trend",
+    "seed": 7,
+    "status": "ok",
+    "obs_keys": [
+      "task_name",
+      "buggy_query",
+      "schema_sql",
+      "expected_row_count",
+      "task_description",
+      "attempts_remaining",
+      "done"
+    ],
+    "expected_row_count": 11,
+    "reward": 0.0
+  },
+  {
+    "task": "monthly_revenue_trend",
+    "seed": 8,
+    "status": "ok",
+    "obs_keys": [
+      "task_name",
+      "buggy_query",
+      "schema_sql",
+      "expected_row_count",
+      "task_description",
+      "attempts_remaining",
+      "done"
+    ],
+    "expected_row_count": 11,
+    "reward": 0.0
+  },
+  {
+    "task": "monthly_revenue_trend",
+    "seed": 9,
+    "status": "ok",
+    "obs_keys": [
+      "task_name",
+      "buggy_query",
+      "schema_sql",
+      "expected_row_count",
+      "task_description",
+      "attempts_remaining",
+      "done"
+    ],
+    "expected_row_count": 11,
+    "reward": 0.0
+  },
+  {
+    "task": "slow_query_optimization",
+    "seed": 0,
+    "status": "ok",
+    "obs_keys": [
+      "task_name",
+      "buggy_query",
+      "schema_sql",
+      "expected_row_count",
+      "task_description",
+      "attempts_remaining",
+      "done"
+    ],
+    "expected_row_count": 3,
+    "reward": 0.0
+  },
+  {
+    "task": "slow_query_optimization",
+    "seed": 1,
+    "status": "ok",
+    "obs_keys": [
+      "task_name",
+      "buggy_query",
+      "schema_sql",
+      "expected_row_count",
+      "task_description",
+      "attempts_remaining",
+      "done"
+    ],
+    "expected_row_count": 3,
+    "reward": 0.0
+  },
+  {
+    "task": "slow_query_optimization",
+    "seed": 2,
+    "status": "ok",
+    "obs_keys": [
+      "task_name",
+      "buggy_query",
+      "schema_sql",
+      "expected_row_count",
+      "task_description",
+      "attempts_remaining",
+      "done"
+    ],
+    "expected_row_count": 3,
+    "reward": 0.0
+  },
+  {
+    "task": "slow_query_optimization",
+    "seed": 3,
+    "status": "ok",
+    "obs_keys": [
+      "task_name",
+      "buggy_query",
+      "schema_sql",
+      "expected_row_count",
+      "task_description",
+      "attempts_remaining",
+      "done"
+    ],
+    "expected_row_count": 3,
+    "reward": 0.0
+  },
+  {
+    "task": "slow_query_optimization",
+    "seed": 4,
+    "status": "ok",
+    "obs_keys": [
+      "task_name",
+      "buggy_query",
+      "schema_sql",
+      "expected_row_count",
+      "task_description",
+      "attempts_remaining",
+      "done"
+    ],
+    "expected_row_count": 3,
+    "reward": 0.0
+  },
+  {
+    "task": "slow_query_optimization",
+    "seed": 5,
+    "status": "ok",
+    "obs_keys": [
+      "task_name",
+      "buggy_query",
+      "schema_sql",
+      "expected_row_count",
+      "task_description",
+      "attempts_remaining",
+      "done"
+    ],
+    "expected_row_count": 3,
+    "reward": 0.0
+  },
+  {
+    "task": "slow_query_optimization",
+    "seed": 6,
+    "status": "ok",
+    "obs_keys": [
+      "task_name",
+      "buggy_query",
+      "schema_sql",
+      "expected_row_count",
+      "task_description",
+      "attempts_remaining",
+      "done"
+    ],
+    "expected_row_count": 3,
+    "reward": 0.0
+  },
+  {
+    "task": "slow_query_optimization",
+    "seed": 7,
+    "status": "ok",
+    "obs_keys": [
+      "task_name",
+      "buggy_query",
+      "schema_sql",
+      "expected_row_count",
+      "task_description",
+      "attempts_remaining",
+      "done"
+    ],
+    "expected_row_count": 3,
+    "reward": 0.0
+  },
+  {
+    "task": "slow_query_optimization",
+    "seed": 8,
+    "status": "ok",
+    "obs_keys": [
+      "task_name",
+      "buggy_query",
+      "schema_sql",
+      "expected_row_count",
+      "task_description",
+      "attempts_remaining",
+      "done"
+    ],
+    "expected_row_count": 3,
+    "reward": 0.0
+  },
+  {
+    "task": "slow_query_optimization",
+    "seed": 9,
+    "status": "ok",
+    "obs_keys": [
+      "task_name",
+      "buggy_query",
+      "schema_sql",
+      "expected_row_count",
+      "task_description",
+      "attempts_remaining",
+      "done"
+    ],
+    "expected_row_count": 3,
+    "reward": 0.0
+  }
+]

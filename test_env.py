@@ -100,7 +100,7 @@ def test_reset_returns_observation(env):
     assert obs.task_name == "find_high_earners"
     assert obs.buggy_query != ""
     assert obs.schema_sql != ""
-    assert len(obs.expected_rows) > 0
+    assert obs.expected_row_count > 0
     assert obs.attempts_remaining == 5
     assert obs.done is False
 
@@ -137,11 +137,11 @@ def test_reset_can_switch_tasks(env):
 
 @pytest.mark.parametrize("task_name", ALL_TASKS)
 def test_correct_query_scores_1(env, task_name):
-    """Every task has a valid correct_query that should yield reward=0.99 (exact match)."""
+    """Every task has a valid correct_query that should yield reward=1.0 (exact match)."""
     env.reset(task_name)
     result = env.step(SQLDebugAction(fixed_query=CORRECT_QUERIES[task_name]))
-    assert result.reward == 0.99, (
-        f"Task '{task_name}' expected reward=0.99, got {result.reward}. "
+    assert result.reward == 1.0, (
+        f"Task '{task_name}' expected reward=1.0, got {result.reward}. "
         f"Info: {result.info}"
     )
     assert result.done is True
@@ -197,8 +197,8 @@ def test_partial_reward_is_between_0_and_1(env):
             fixed_query="SELECT name, salary FROM employees WHERE salary > 50000 AND name = 'Alice Johnson'"
         )
     )
-    # Partial: 0.3 + 0.5 * jaccard, or 0.01 if jaccard=0. Either way < 0.99.
-    assert result.reward < 0.99
+    # Partial: 0.3 + 0.5 * jaccard, or 0.01 if jaccard=0. Either way < 1.0.
+    assert result.reward < 1.0
     assert result.reward > 0.0
 
 
@@ -363,7 +363,9 @@ def test_reuse_after_close(env):
 def test_reward_in_range(env, task_name):
     obs = env.reset(task_name)
     result = env.step(SQLDebugAction(fixed_query=obs.buggy_query))
-    assert 0.0 < result.reward < 1.0
+    # slow_query_optimization buggy query is functionally correct (same rows, O(n²) perf)
+    # so it may legitimately score 1.0 — reward must be in (0, 1]
+    assert 0.0 < result.reward <= 1.0
 
 
 # ===========================================================================
@@ -374,13 +376,13 @@ def test_reward_in_range(env, task_name):
 def test_score_exact_match():
     rows = [{"name": "Alice", "salary": "95000.0"}]
     reward, metrics = _score(rows, rows)
-    assert reward == 0.99
+    assert reward == 1.0
     assert metrics["match_type"] == "exact"
 
 
 def test_score_both_empty():
     reward, metrics = _score([], [])
-    assert reward == 0.99
+    assert reward == 1.0
     assert metrics["match_type"] == "exact"
 
 
@@ -432,7 +434,7 @@ def test_score_order_insensitive():
         {"name": "Alice", "salary": "95000"},
     ]
     reward, metrics = _score(expected, actual)
-    assert reward == 0.99
+    assert reward == 1.0
     assert metrics["match_type"] == "exact"
 
 

@@ -104,10 +104,17 @@ def metadata() -> dict[str, Any]:
         "name": "sql-debug-env",
         "description": (
             "SQL Query Debugging environment for AI agents. "
-            "Agent receives a buggy SQL query and must fix it."
+            "Agent receives a buggy SQL query and must fix it. "
+            "Measures LLM readiness as a deployed SQL debugging assistant."
         ),
         "version": "1.0.0",
-        "tags": ["openenv", "sql", "debugging", "real-world"],
+        "tags": ["openenv", "sql", "debugging", "real-world", "code-understanding"],
+        "use_cases": [
+            "DBA code review automation",
+            "Data team query debugging",
+            "LLM fine-tuning (anti-examples)",
+            "AI pair-programming for SQL",
+        ],
         "tasks": [
             {"name": "find_high_earners", "difficulty": "easy"},
             {"name": "top_products_by_category", "difficulty": "medium"},
@@ -139,7 +146,7 @@ def schema() -> dict[str, Any]:
                 "task_name": {"type": "string"},
                 "buggy_query": {"type": "string"},
                 "schema_sql": {"type": "string"},
-                "expected_rows": {"type": "array"},
+                "expected_row_count": {"type": "integer"},
                 "task_description": {"type": "string"},
                 "attempts_remaining": {"type": "integer"},
                 "done": {"type": "boolean"},
@@ -224,6 +231,22 @@ def step(body: StepRequest) -> dict[str, Any]:
 @app.get("/state")
 def state() -> dict[str, Any]:
     return _env.state()
+
+
+@app.get("/expected_rows")
+def get_expected_rows() -> dict[str, Any]:
+    """Return expected rows for the current task (for debugging/analysis only).
+
+    This endpoint is intentionally separate from the agent observation so that
+    the agent cannot see the ground-truth rows during evaluation.
+    """
+    if _env._task is None:
+        raise HTTPException(status_code=400, detail="Call /reset first")
+    return {
+        "task_name": _env._task.task_name,
+        "expected_rows": _env._expected_rows,
+        "row_count": len(_env._expected_rows),
+    }
 
 
 def main() -> None:

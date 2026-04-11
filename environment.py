@@ -43,7 +43,7 @@ class SQLDebugObservation(BaseModel):
     task_name: str
     buggy_query: str
     schema_sql: str
-    expected_rows: list[dict[str, Any]]
+    expected_row_count: int  # count only — full rows kept server-side to prevent cheating
     task_description: str
     attempts_remaining: int
     done: bool = False
@@ -197,7 +197,7 @@ def _score(
     if not expected and not actual:
         metrics["match_type"] = "exact"
         metrics["jaccard_similarity"] = 1.0
-        return 0.99, metrics
+        return 1.0, metrics
 
     norm_expected = _normalise_rows(expected)
     norm_actual = _normalise_rows(actual)
@@ -207,7 +207,7 @@ def _score(
         metrics["match_type"] = "exact"
         metrics["jaccard_similarity"] = 1.0
         metrics["row_overlap"] = len(expected)
-        return 0.99, metrics
+        return 1.0, metrics
 
     # Column-set check — completely wrong schema → near 0
     expected_cols = set(expected[0].keys()) if expected else set()
@@ -389,7 +389,7 @@ class SQLDebugEnv:
             }
 
         # Episode ends on exact match or exhausted attempts
-        if reward >= 0.99 or self._attempts_remaining == 0:
+        if reward >= 1.0 or self._attempts_remaining == 0:
             self._done = True
 
         info["attempts_remaining"] = self._attempts_remaining
@@ -431,7 +431,7 @@ class SQLDebugEnv:
             task_name=self._task.task_name,
             buggy_query=self._task.buggy_query,
             schema_sql=self._task.schema_sql,
-            expected_rows=self._expected_rows,
+            expected_row_count=len(self._expected_rows),
             task_description=self._task.task_description,
             attempts_remaining=self._attempts_remaining,
             done=self._done,
