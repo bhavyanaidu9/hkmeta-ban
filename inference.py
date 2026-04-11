@@ -185,7 +185,8 @@ def run_task(task_name: str, http: httpx.Client) -> None:
             try:
                 response = client.chat.completions.create(
                     model=MODEL_NAME,
-                    messages=[{"role": "system", "content": SYSTEM_PROMPT}] + conversation,
+                    messages=[{"role": "system", "content": SYSTEM_PROMPT}]
+                    + conversation,
                     temperature=0.0,
                     max_tokens=512,
                 )
