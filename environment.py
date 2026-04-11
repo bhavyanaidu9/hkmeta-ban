@@ -43,7 +43,8 @@ class SQLDebugObservation(BaseModel):
     task_name: str
     buggy_query: str
     schema_sql: str
-    expected_row_count: int  # count only — full rows kept server-side to prevent cheating
+    # Full rows are kept server-side; only the count is exposed to the agent.
+    expected_row_count: int
     task_description: str
     attempts_remaining: int
     done: bool = False

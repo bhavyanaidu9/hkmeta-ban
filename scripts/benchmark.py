@@ -23,7 +23,7 @@ _root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if _root not in sys.path:
     sys.path.insert(0, _root)
 
-from environment import SQLDebugEnv, SQLDebugAction  # noqa: E402
+from environment import SQLDebugEnv  # noqa: E402
 
 TASK_NAMES = [
     "find_high_earners",
