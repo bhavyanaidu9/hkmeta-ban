@@ -15,7 +15,7 @@ API_BASE_URL  — API endpoint for the LLM
 MODEL_NAME    — Model identifier used for inference
                 default: "Qwen/Qwen2.5-72B-Instruct"
 ENV_URL       — Base URL of the deployed SQL Debug Env HF Space
-                default: "http://localhost:7860"
+                default: "https://nallgopu-sql-debug-env.hf.space"
 
 Stdout format (OpenEnv spec — exact)
 --------------------------------------
@@ -41,7 +41,7 @@ from openai import OpenAI
 API_BASE_URL: str = os.getenv("API_BASE_URL", "https://router.huggingface.co/v1")
 MODEL_NAME: str = os.getenv("MODEL_NAME", "Qwen/Qwen2.5-72B-Instruct")
 HF_TOKEN: Optional[str] = os.getenv("HF_TOKEN")
-ENV_URL: str = os.getenv("ENV_URL", "http://localhost:7860")
+ENV_URL: str = os.getenv("ENV_URL", "https://nallgopu-sql-debug-env.hf.space")
 
 if HF_TOKEN is None:
     raise ValueError("HF_TOKEN environment variable is required")
